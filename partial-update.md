@@ -29,25 +29,25 @@ We supported manually add class members, like field, method and constructor. We 
 
 * manually added field: 
 
-This is an example file of manually adding field: 
-https://github.com/Azure/autorest.java/blob/main/partial-update-tests/existing/src/main/java/fixtures/bodystring/StringOperationClient.java#L23-L24
+	This is an example file of manually adding field: 
+	https://github.com/Azure/autorest.java/blob/main/partial-update-tests/existing/src/main/java/fixtures/bodystring/StringOperationClient.java#L23-L24
 
-After codegen, the output is like this: 
-https://github.com/Azure/autorest.java/blob/main/partial-update-tests/generated/src/main/java/fixtures/bodystring/StringOperationClient.java#L23-L24
+	After codegen, the output is like this: 
+	https://github.com/Azure/autorest.java/blob/main/partial-update-tests/generated/src/main/java/fixtures/bodystring/StringOperationClient.java#L23-L24
 
 * manually added constructor:
-This is an example of manually adding constructor:
-https://github.com/Azure/autorest.java/blob/main/partial-update-tests/existing/src/main/java/fixtures/bodystring/StringOperationClient.java#L36-L39
+	This is an example of manually adding constructor:
+	https://github.com/Azure/autorest.java/blob/main/partial-update-tests/existing/src/main/java/fixtures/bodystring/StringOperationClient.java#L36-L39
 
-After codegen, the output is like this: 
-https://github.com/Azure/autorest.java/blob/main/partial-update-tests/generated/src/main/java/fixtures/bodystring/StringOperationClient.java#L36-L39
+	After codegen, the output is like this: 
+	https://github.com/Azure/autorest.java/blob/main/partial-update-tests/generated/src/main/java/fixtures/bodystring/StringOperationClient.java#L36-L39
 
 * manually added member method: 
-This is an example of manually adding member method:
-https://github.com/Azure/autorest.java/blob/main/partial-update-tests/existing/src/main/java/fixtures/bodystring/StringOperationClient.java#L275-L282
+	This is an example of manually adding member method:
+	https://github.com/Azure/autorest.java/blob/main/partial-update-tests/existing/src/main/java/fixtures/bodystring/StringOperationClient.java#L275-L282
 
-After codegen, the output is like this: 
-https://github.com/Azure/autorest.java/blob/main/partial-update-tests/generated/src/main/java/fixtures/bodystring/StringOperationClient.java#L275-L282
+	After codegen, the output is like this: 
+	https://github.com/Azure/autorest.java/blob/main/partial-update-tests/generated/src/main/java/fixtures/bodystring/StringOperationClient.java#L275-L282
 
 ### Manually update method signature, e.g. parameter change, method access level change
 
