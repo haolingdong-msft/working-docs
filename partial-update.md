@@ -21,7 +21,8 @@ partial-update: true
 Currently partial update functionality is only supported in `Client` and `Builder`.
 
 ### Detect Manual Source File Path
-We first detect your `swagger/README.md`, then get its parent `swagger` folder, then get its parent - project base directory. Then get source folder `src/main/java` and files from project base directory.
+
+We first detect your `swagger/README.md`, then get its parent `swagger` folder, then get its parent - project base directory. Then get source folder `src/main/java` and files from project base directory. This is a sample code structure: https://github.com/Azure/autorest.java/tree/main/partial-update-tests/existing
 
 
 ### Detect Manual Code
