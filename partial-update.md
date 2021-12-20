@@ -6,6 +6,8 @@ Data-plane codegen has the benifit of stable API, quickly shippable package etc.
 
 ## Usage
 
+### partial-update Flag
+
 If you want to use partial update feature, you will need to add flag `--partial-update` to enable it. The flag can be added in swagger/README.md, like this:
 ```yaml
 input-file: ./specification/bodystring.json
@@ -15,9 +17,18 @@ namespace: fixtures.bodystring
 low-level-client: true
 partial-update: true
 ```
-When adding/updating code manually, you need to **remove** `@Generated` annotation from the member, this is how we detect the code is manually updated and will not overwrite your update after finishing codegen. 
 
-Currently partial update functionality is on supported in `Client` and `Builder`.
+Currently partial update functionality is only supported in `Client` and `Builder`.
+
+### Detect Manual Source File Path
+We first detect your `swagger/README.md`, then get its parent `swagger` folder, then get its parent - project base directory. Then get source folder `src/main/java` and files from project base directory.
+
+
+### Detect Manual Code
+
+If a member in the class has `@Generated` annotation, then we consider it as auto-generated code, otherwise, we consider it as manual code. 
+
+When adding/updating code manually, you need to **remove** `@Generated` annotation from the member, because this is how we detect the code is manually updated and will not overwrite your update after finishing codegen. 
 
 ## Use Cases
 
