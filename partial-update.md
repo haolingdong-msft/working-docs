@@ -110,7 +110,6 @@ Detailed logic:
 1. Parse existing file content and generated file content using [JavaParser](https://javaparser.org/)
 2. Get class members for existing file and generated file
 3. Check if the file is in scope of partial update by iterate the members in generated file to see if there is a method has `@Generated` annotation. If it has `@Generated` annotation, then the file is in scope of partial update, otherwise return generated file content directly.
-	**A potential issue here**: if existing file generated before we support adding `@Generated` annotation, then the existing file will be considered as all manual code change. So existing file members will be kept. One solution is to add a flag to determine whether we need to do partial update. Another solution is to check if existing file has `@Generated` annotation, but an edge case here is when use manually update all existing file, then existing file does not have `@Generated` annotation, but we still want to handle partial update. Currently I use the first solution to add a flag to enable partial update feature.
 4. Iterate existing file members, keep manual updated members, and replace generated members with the corresponding newly generated one. Here we will not do the replace on the existing file member list,  we just create a new member list `updatedMembersList` and put in those manually update members and newly generated members.
 5. Add remaining newly generated members to `updatedMembersList`
 6. Update generated file members with `updatedMembersList`
