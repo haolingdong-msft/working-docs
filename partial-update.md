@@ -63,7 +63,7 @@ https://github.com/Azure/autorest.java/blob/main/partial-update-tests/generated/
 
 If you manually removed one class member, if the member's definition is in Swagger specification, this member will be auto generated again, so if you want to remove a class member, the correct way to do it is to modify swagger directly. 
 
-### Swagger add a new api
+### Add a new api in Swagger
 
 If Swagger specification adds a new API, after codegen, the generated method will be added to the generated class.
 
@@ -74,7 +74,7 @@ After codegen, the output is like this, method `getStringAdded` is generated.
 https://github.com/Azure/autorest.java/blob/main/partial-update-tests/generated/src/main/java/fixtures/bodystring/EnumClient.java
 
 
-### Swagger update an existing API
+### Update an existing API in Swagger
  
 We also support updating an existing API in Swagger speficication. If the API is auto generated, then the existing generated member will be replaced to the new one. If it is manual updated, we will keep the manual updated member.
 
@@ -84,7 +84,7 @@ https://github.com/Azure/autorest.java/blob/main/partial-update-tests/existing/s
 After codegen, the output is like this:
 https://github.com/Azure/autorest.java/blob/main/partial-update-tests/generated/src/main/java/fixtures/bodystring/EnumClient.java
 
-### Swagger delete an existing API
+### Delete an existing API in Swagger
 	
 When deleting an existing API in Swagger. If the existing api is auto generated, then it should be removed. If it is manual updated, we will keep the manual updated member.
 
