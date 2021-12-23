@@ -97,6 +97,9 @@ In conclusion. The issue happens when we define ServiceBusProcessorClient as bea
 | N          | N                                        | always terminate successfully                                                              |
 
 ## Check difference in jstack
+
+From the experiments, I found the issue only happens when we define ServiceBusProcessorClient as bean.
+
 I compared log for 'SpringBoot Application + define ServiceBusProcessorClient as bean' and log for 'SpringBoot Application + not define ServiceBusProcessorClient as bean'. In log for 'SpringBoot Application + define ServiceBusProcessorClient as bean', we found below additional stack after receiving ctrl-c (SIGINT):
 
 [jstack log for SpringBoot Application + define ServiceBusProcessorClient as bean]
