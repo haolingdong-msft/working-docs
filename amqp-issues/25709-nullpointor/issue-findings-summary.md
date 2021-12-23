@@ -148,7 +148,7 @@ I compared log for 'SpringBoot Application + define ServiceBusProcessorClient as
    Locked ownable synchronizers:
 	- None
 ```
-It calls ServiceBusProcessorClient.close() and ServiceBusReceiverAsyncClient.close().
+When defing ServiceBusProcessorClient as bean, after sending ctrl-c event. SpringApplicationShutdownHook calls ServiceBusProcessorClient.close() and ServiceBusReceiverAsyncClient.close(). 
 
 ## Narrow down problem to ServiceBusProcessorClient.close()
 ```java
@@ -258,7 +258,7 @@ Adding logs in ServiceBusReceiverAsyncClient.close():
         onClientClose.run();
     }
 ```
-We found the process can't be terminated because `completionLock.acquire();` stucked. If `completionLock` Permits = 0, then the process can't be terminated, otherwise process can be terminated.
+
 
 [ctrl-c can't terminate log]
 ```ctrl-c can't terminate log
@@ -301,6 +301,8 @@ try isDisposed.getAndSet(true)
 ServiceBusProcessorClient close() asyncClient shutdown
 ServiceBusProcessorClient close() end
 ```
+
+We found the process can't be terminated because `completionLock.acquire();` stucked. If `completionLock` Permits = 0, then the process can't be terminated, otherwise process can be terminated.
 
 ## Conclusion
 In conclusion, the issue is caused by `completionLock.acquire()` in `ServiceBusReceiverAsyncClient.close()`. Sometimes `completionLock` is not released, so when sending ctrl-c signal to spring Boot applcation, SpringBoot Shutdown hook calls `ServiceBusReceiverAsyncClient.close()` which calls `completionLock.acquire()` and stucked since `completionLock` can not be aquired.
