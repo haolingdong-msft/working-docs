@@ -93,7 +93,7 @@ public class DemoApplication {
 ```
 In conclusion. The issue happens when we define ServiceBusProcessorClient as bean, if it's not defined as bean, the issue will not happen.
 
-| SpringBoot | Define ServiceBusProcessorClient as bean | Result                                                                                     |
+| SpringBoot | Define ServiceBusProcessorClient as bean | Reproduce Result                                                                                     |
 | ---------- | ---------------------------------------- | ------------------------------------------------------------------------------------------ |
 | Y          | Y                                        | sometimes ctrl-c can't terminate successfully, sometimes ctrl-c can terminate successfully |
 | Y          | N                                        | always terminate successfully                                                              |
