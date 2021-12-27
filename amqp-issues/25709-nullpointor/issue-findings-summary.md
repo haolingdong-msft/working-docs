@@ -6,12 +6,8 @@ https://github.com/Azure/azure-sdk-for-java/issues/25709
 User creates a Spring bean that returns a ServiceBusProcessorClient instance. Define a processMessage and processError handler. In the processMessage handler function, do "throw new NullPointerException()". Observe that processError function is called. Try to stop the application using Ctrl-c. Observe that it is not possible to fully stop it. Can only kill the java-process using kill or system console.
 
 ## Reproduce issue
-I did below three experiments.
 
-### SpringBoot Application + define ServiceBusProcessorClient as bean
-
-I defined `processMessageHandler` which throw NullPointorException. Also defin a `ServiceBusProcessorClient` bean.
-The result is sometimes ctrl-c can't terminate successfully, sometimes ctrl-c can terminate successfully.
+I did below three experiments. I defined below `processMessageHandler` which throw NullPointorException for all experiments.
 
 ```java
 @Component
@@ -28,6 +24,13 @@ public class ServiceBusMessageHandler {
 
 }
 ```
+
+### SpringBoot Application + define ServiceBusProcessorClient as bean
+
+I define a `ServiceBusProcessorClient` bean.
+The result is sometimes ctrl-c can't terminate successfully, sometimes ctrl-c can terminate successfully.
+
+
 ```java
 @Configuration
 public class ServiceBusTestConfiguration {
