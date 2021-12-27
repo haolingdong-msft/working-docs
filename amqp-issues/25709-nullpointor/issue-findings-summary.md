@@ -219,7 +219,7 @@ ServiceBusProcessorClient close() asyncClient not null
 ServiceBusReceiverAsyncClient close() start
 ```
 
-When ctrl-c can't terminate, `ServiceBusProcessorClient close() asyncClient shutdown` is not printed which means `asyncClient.get().close();` has error.
+In [ctrl-c can't terminate log], `ServiceBusProcessorClient close() asyncClient shutdown` is not printed which means `asyncClient.get().close();` has error.
 
 ## Narrow down problem to `completionLock.acquire();`
 Adding logs in ServiceBusReceiverAsyncClient.close():
@@ -307,7 +307,7 @@ ServiceBusProcessorClient close() asyncClient shutdown
 ServiceBusProcessorClient close() end
 ```
 
-We found the process can't be terminated because `completionLock.acquire();` stucked. If `completionLock` Permits = 0, then the process can't be terminated, otherwise process can be terminated.
+You will see in [ctrl-c can't terminate log] log, "try isDisposed.getAndSet(true)" log is not printed. This is because `completionLock.acquire();` stucked. If `completionLock` Permits = 0, then the process can't be terminated, otherwise process can be terminated.
 
 ## Conclusion
 In conclusion, the issue is caused by [`completionLock.acquire()`](https://github.com/haolingdong-msft/azure-sdk-for-java/blob/main/sdk/servicebus/azure-messaging-servicebus/src/main/java/com/azure/messaging/servicebus/ServiceBusReceiverAsyncClient.java#L1202-L1202) in `ServiceBusReceiverAsyncClient.close()`. Sometimes `completionLock` is not released, so when sending ctrl-c signal to spring Boot applcation, SpringBoot Shutdown hook calls `ServiceBusReceiverAsyncClient.close()` which calls `completionLock.acquire()` and stucked since `completionLock` can not be aquired.
