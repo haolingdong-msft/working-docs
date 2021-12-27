@@ -98,7 +98,7 @@ In conclusion. The issue happens when we define ServiceBusProcessorClient as bea
 
 ## Check difference in jstack
 
-From the experiments, I found the issue only happens when we define ServiceBusProcessorClient as bean.
+From the experiments, I found **the issue only happens when we define ServiceBusProcessorClient as bean**.
 
 I compared log for 'SpringBoot Application + define ServiceBusProcessorClient as bean' and log for 'SpringBoot Application + not define ServiceBusProcessorClient as bean'. In log for 'SpringBoot Application + define ServiceBusProcessorClient as bean', we found below additional stack after receiving ctrl-c (SIGINT):
 
@@ -310,4 +310,4 @@ ServiceBusProcessorClient close() end
 We found the process can't be terminated because `completionLock.acquire();` stucked. If `completionLock` Permits = 0, then the process can't be terminated, otherwise process can be terminated.
 
 ## Conclusion
-In conclusion, the issue is caused by `completionLock.acquire()` in `ServiceBusReceiverAsyncClient.close()`. Sometimes `completionLock` is not released, so when sending ctrl-c signal to spring Boot applcation, SpringBoot Shutdown hook calls `ServiceBusReceiverAsyncClient.close()` which calls `completionLock.acquire()` and stucked since `completionLock` can not be aquired.
+In conclusion, the issue is caused by [`completionLock.acquire()`](https://github.com/haolingdong-msft/azure-sdk-for-java/blob/main/sdk/servicebus/azure-messaging-servicebus/src/main/java/com/azure/messaging/servicebus/ServiceBusReceiverAsyncClient.java#L1202-L1202) in `ServiceBusReceiverAsyncClient.close()`. Sometimes `completionLock` is not released, so when sending ctrl-c signal to spring Boot applcation, SpringBoot Shutdown hook calls `ServiceBusReceiverAsyncClient.close()` which calls `completionLock.acquire()` and stucked since `completionLock` can not be aquired.
