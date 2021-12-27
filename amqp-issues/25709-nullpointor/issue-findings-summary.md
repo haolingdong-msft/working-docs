@@ -314,3 +314,5 @@ You will see in [ctrl-c can't terminate log] log, "try isDisposed.getAndSet(true
 
 ## Conclusion
 In conclusion, the issue is caused by [`completionLock.acquire()`](https://github.com/haolingdong-msft/azure-sdk-for-java/blob/main/sdk/servicebus/azure-messaging-servicebus/src/main/java/com/azure/messaging/servicebus/ServiceBusReceiverAsyncClient.java#L1202-L1202) in `ServiceBusReceiverAsyncClient.close()` stucks. If we create `ServiceBusProcessorClient` as bean in SpringBoot application, and send ctrl-c signal to spring Boot applcation, SpringBoot Shutdown hook calls `ServiceBusReceiverAsyncClient.close()` which calls `completionLock.acquire()`, sometimes `completionLock` is not released, so the process stucked since `completionLock` can not be aquired.
+
+The `completionLock` is released in `finally` block [here](https://github.com/haolingdong-msft/azure-sdk-for-java/blob/main/sdk/servicebus/azure-messaging-servicebus/src/main/java/com/azure/messaging/servicebus/FluxAutoComplete.java#L98-L98). Not sure why sometimes it can not be released.
