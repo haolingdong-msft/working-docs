@@ -1,4 +1,4 @@
-# Issue Findings
+# Issue Root Cause Analysis
 
 ## Issue summary
 https://github.com/Azure/azure-sdk-for-java/issues/25709
