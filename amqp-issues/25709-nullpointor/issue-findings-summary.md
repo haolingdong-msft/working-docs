@@ -7,7 +7,7 @@ User creates a Spring bean that returns a ServiceBusProcessorClient instance. De
 
 ## Reproduce issue
 
-I did below three experiments. I defined below `processMessageHandler` which throw NullPointorException for all experiments.
+I did below three experiments. I defined below `processMessageHandler` which throw NullPointerException for all experiments.
 
 ```java
 @Component
