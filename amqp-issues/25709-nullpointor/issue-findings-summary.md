@@ -316,3 +316,74 @@ You will see in [ctrl-c can't terminate log] log, "try isDisposed.getAndSet(true
 In conclusion, the issue is caused by [`completionLock.acquire()`](https://github.com/haolingdong-msft/azure-sdk-for-java/blob/main/sdk/servicebus/azure-messaging-servicebus/src/main/java/com/azure/messaging/servicebus/ServiceBusReceiverAsyncClient.java#L1202-L1202) in `ServiceBusReceiverAsyncClient.close()` stucks. If we create `ServiceBusProcessorClient` as bean in SpringBoot application, and send ctrl-c signal to spring Boot applcation, SpringBoot Shutdown hook calls `ServiceBusReceiverAsyncClient.close()` which calls `completionLock.acquire()`, sometimes `completionLock` is not released, so the process stucked since `completionLock` can not be aquired.
 
 The `completionLock` is released in `finally` block [here](https://github.com/haolingdong-msft/azure-sdk-for-java/blob/main/sdk/servicebus/azure-messaging-servicebus/src/main/java/com/azure/messaging/servicebus/FluxAutoComplete.java#L98-L98). Not sure why sometimes it can not be released.
+
+
+## Mitigate issue on client side
+
+Try to unblock the customer use case (how to do graceful shutdown), we can try to modify the sample code in the processMessage() to catch exceptions from cx business logic and call processor stop() (to init the closure of underlying clients). Then rethrow the exception for bean to run the destroy/shutdown phase for other cleanups. 
+
+### Use processorClient.close() in catch
+Able to use ctrl-c to kill: in catch, we use `processorClient.close();` to close client.
+```java
+@Configuration
+public class ServiceBusTestConfiguration {
+    static String connectionString = "<connection-string>";
+    static String queueName = "<queue-name>";
+
+    ServiceBusProcessorClient processorClient = null;
+
+    @Bean( initMethod = "start")
+    public ServiceBusProcessorClient serviceBusProcessorClient() {
+        processorClient = new ServiceBusClientBuilder()
+                .connectionString(connectionString)
+                .processor()
+                .queueName(queueName)
+                .processMessage((context) -> {
+                    try {
+                        System.out.println("process message");
+                        throw new NullPointerException();
+                    } catch (Exception e) {
+                        processorClient.close();
+                        e.printStackTrace();
+                        throw e;
+                    }
+                })
+                .processError(ServiceBusMessageHandler::processErrorHandler)
+                .buildProcessorClient();
+        return processorClient;
+    }
+}
+```
+
+### Use processorClient.stop() in catch
+unable to use ctrl-c to kill: in catch, we use `processorClient.stop();` to close client.
+```java
+@Configuration
+public class ServiceBusTestConfiguration {
+    static String connectionString = "<connection-string>";
+    static String queueName = "<queue-name>";
+
+    ServiceBusProcessorClient processorClient = null;
+
+    @Bean( initMethod = "start")
+    public ServiceBusProcessorClient serviceBusProcessorClient() {
+        processorClient = new ServiceBusClientBuilder()
+                .connectionString(connectionString)
+                .processor()
+                .queueName(queueName)
+                .processMessage((context) -> {
+                    try {
+                        System.out.println("process message");
+                        throw new NullPointerException();
+                    } catch (Exception e) {
+                        processorClient.stop();
+                        e.printStackTrace();
+                        throw e;
+                    }
+                })
+                .processError(ServiceBusMessageHandler::processErrorHandler)
+                .buildProcessorClient();
+        return processorClient;
+    }
+}
+```
