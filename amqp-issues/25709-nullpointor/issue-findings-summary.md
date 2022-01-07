@@ -387,3 +387,4 @@ public class ServiceBusTestConfiguration {
     }
 }
 ```
+In summary, if we use processor.close() in catch block, ctrl-c can work and even if user don't use ctrl-c, the program will exit. But if we use processor.stop() in catch block,  ctrl-c can't work and if user don't use ctrl-c, the program will not exit.
