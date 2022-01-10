@@ -388,3 +388,197 @@ public class ServiceBusTestConfiguration {
 }
 ```
 In summary, if we use processor.close() in catch block, ctrl-c can work and even if user don't use ctrl-c, the program will exit. But if we use processor.stop() in catch block,  ctrl-c can't work and if user don't use ctrl-c, the program will not exit.
+
+## Fixing
+
+I tried to add timeout when acquiring `completionLock` in `ServiceBusReceiverAsyncClient.close()`.
+The application can be terminated gracefully after the timeout period.
+
+[log for adding timeout]
+```
+2022-01-10 14:59:47.653  INFO 20140 --- [           main] c.s.demo.DemoSprintBootApplication       : Starting DemoSprintBootApplication v0.0.1-SNAPSHOT using Java 17.0.1 on haolindong-712 with PID 20140 (C:\workspace\servicebus-test\target\demo-0.0.1-SNAPSHOT.jar started by haolingdong in C:\workspace\servicebus-
+test)
+2022-01-10 14:59:47.653  INFO 20140 --- [           main] c.s.demo.DemoSprintBootApplication       : No active profile set, falling back to default profiles: default
+2022-01-10 14:59:48.167  INFO 20140 --- [           main] f.a.AutowiredAnnotationBeanPostProcessor : Autowired annotation is not supported on static fields: static com.azure.messaging.servicebus.ServiceBusProcessorClient com.servicebus.demo.ServiceBusMessageHandler.serviceBusProcessorClient
+2022-01-10 14:59:48.444  INFO 20140 --- [           main] c.a.m.s.i.ServiceBusConnectionProcessor  : namespace[testsb-hl.servicebus.windows.net] entityPath[N/A]: Setting next AMQP channel.
+2022-01-10 14:59:48.444  INFO 20140 --- [           main] c.a.m.s.i.ServiceBusConnectionProcessor  : namespace[testsb-hl.servicebus.windows.net] entityPath[N/A]: Next AMQP channel received, updating 0 current subscribers
+2022-01-10 14:59:48.444  INFO 20140 --- [           main] c.a.m.s.ServiceBusClientBuilder          : # of open clients with shared connection: 1
+2022-01-10 14:59:48.460  INFO 20140 --- [           main] c.a.m.s.ServiceBusReceiverAsyncClient    : smallsizequeue: Creating consumer for link 'smallsizequeue_e14a7a_1641797988460'
+2022-01-10 14:59:48.475  INFO 20140 --- [           main] c.a.m.s.i.ServiceBusReceiveLinkProcessor : Requesting a new AmqpReceiveLink from upstream.
+2022-01-10 14:59:48.497  INFO 20140 --- [           main] c.a.c.a.i.ReactorConnection              : connectionId[MF_a61cc2_1641797988413]: Creating and starting connection to testsb-hl.servicebus.windows.net:5671
+2022-01-10 14:59:48.561  INFO 20140 --- [           main] c.a.c.a.implementation.ReactorExecutor   : connectionId[MF_a61cc2_1641797988413] message[Starting reactor.]
+2022-01-10 14:59:48.561  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.handler.ConnectionHandler      : onConnectionInit connectionId[MF_a61cc2_1641797988413] hostname[testsb-hl.servicebus.windows.net] amqpHostname[testsb-hl.servicebus.windows.net]
+2022-01-10 14:59:48.561  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.handler.ReactorHandler         : connectionId[MF_a61cc2_1641797988413] reactor.onReactorInit
+2022-01-10 14:59:48.561  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.handler.ConnectionHandler      : onConnectionLocalOpen connectionId[MF_a61cc2_1641797988413] hostname[testsb-hl.servicebus.windows.net] errorCondition[null] errorDescription[null]
+2022-01-10 14:59:48.611  INFO 20140 --- [           main] c.a.m.servicebus.FluxAutoComplete        : Subscription received. Subscribing downstream. reactor.core.publisher.FluxMap$MapSubscriber@6f204a1a
+2022-01-10 14:59:48.717  INFO 20140 --- [           main] c.s.demo.DemoSprintBootApplication       : Started DemoSprintBootApplication in 1.554 seconds (JVM running for 1.998)
+2022-01-10 14:59:48.747  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.handler.ConnectionHandler      : onConnectionBound connectionId[MF_a61cc2_1641797988413] hostname[testsb-hl.servicebus.windows.net] peerDetails[testsb-hl.servicebus.windows.net:5671]
+2022-01-10 14:59:50.517  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.handler.ConnectionHandler      : onConnectionRemoteOpen hostname[testsb-hl.servicebus.windows.net], connectionId[MF_a61cc2_1641797988413], remoteContainer[18b631be1a354aa6b04c0e3ad3ab118d_G2]
+2022-01-10 14:59:50.517  INFO 20140 --- [ctor-executor-1] c.a.m.s.i.ServiceBusConnectionProcessor  : namespace[testsb-hl.servicebus.windows.net] entityPath[N/A]: Channel is now active.
+2022-01-10 14:59:50.849  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.handler.SessionHandler         : onSessionRemoteOpen connectionId[MF_a61cc2_1641797988413], entityName[smallsizequeue], sessionIncCapacity[0], sessionOutgoingWindow[2147483647]
+2022-01-10 14:59:50.880  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.ReactorConnection              : Setting CBS channel.
+2022-01-10 14:59:51.165  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.handler.SessionHandler         : onSessionRemoteOpen connectionId[MF_a61cc2_1641797988413], entityName[cbs-session], sessionIncCapacity[0], sessionOutgoingWindow[2147483647]
+2022-01-10 14:59:51.203  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.ReactorConnection              : connectionId[MF_a61cc2_1641797988413] entityPath[$cbs] linkName[cbs] Emitting new response channel.
+2022-01-10 14:59:51.203  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.RequestResponseChannel:$cbs    : namespace[MF_a61cc2_1641797988413] entityPath[$cbs]: Setting next AMQP channel.
+2022-01-10 14:59:51.203  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.RequestResponseChannel:$cbs    : namespace[MF_a61cc2_1641797988413] entityPath[$cbs]: Next AMQP channel received, updating 1 current subscribers
+2022-01-10 14:59:51.520  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.handler.SendLinkHandler        : onLinkRemoteOpen connectionId[MF_a61cc2_1641797988413], entityPath[$cbs], linkName[cbs:sender], remoteTarget[Target{address='$cbs', durable=NONE, expiryPolicy=SESSION_END, timeout=0, dynamic=false, dynamicNodeProp
+erties=null, capabilities=null}]
+2022-01-10 14:59:51.520  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.handler.ReceiveLinkHandler     : onLinkRemoteOpen connectionId[MF_a61cc2_1641797988413], entityPath[$cbs], linkName[cbs:receiver], remoteSource[Source{address='$cbs', durable=NONE, expiryPolicy=SESSION_END, timeout=0, dynamic=false, dynamicNodePr
+operties=null, distributionMode=null, filter=null, defaultOutcome=null, outcomes=null, capabilities=null}]
+2022-01-10 14:59:51.520  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.handler.SendLinkHandler        : onLinkRemoteOpen connectionId[MF_a61cc2_1641797988413], entityPath[$cbs], linkName[cbs:sender], remoteTarget[Target{address='$cbs',
+ durable=NONE, expiryPolicy=SESSION_END, timeout=0, dynamic=false, dynamicNodeProperties=null, capabilities=null}]
+2022-01-10 14:59:51.520  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.handler.ReceiveLinkHandler     : onLinkRemoteOpen connectionId[MF_a61cc2_1641797988413], entityPath[$cbs], linkName[cbs:receiver], remoteSource[Source{address='$cbs
+', durable=NONE, expiryPolicy=SESSION_END, timeout=0, dynamic=false, dynamicNodeProperties=null, distributionMode=null, filter=null, defaultOutcome=null, outcomes=null, capabilities=null}]
+2022-01-10 14:59:51.535  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.RequestResponseChannel:$cbs    : namespace[MF_a61cc2_1641797988413] entityPath[$cbs]: Channel is now active.
+2022-01-10 14:59:51.852  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.ActiveClientTokenManager       : Scheduling refresh token task. scopes[amqp://testsb-hl.servicebus.windows.net/smallsizequeue]
+2022-01-10 14:59:51.883  INFO 20140 --- [ctor-executor-1] c.a.c.a.implementation.ReactorSession    : connectionId[MF_a61cc2_1641797988413] sessionId[smallsizequeue] linkName[smallsizequeue_e14a7a_1641797988460] Creating a new receiv
+er link.
+2022-01-10 14:59:51.203  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.RequestResponseChannel:$cbs    : namespace[MF_a61cc2_1641797988413] entityPath[$cbs]: Next AMQP channel received
+, updating 1 current subscribers
+2022-01-10 14:59:51.520  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.handler.SendLinkHandler        : onLinkRemoteOpen connectionId[MF_a61cc2_1641797988413], entityPath[$cbs], linkN
+ame[cbs:sender], remoteTarget[Target{address='$cbs', durable=NONE, expiryPolicy=SESSION_END, timeout=0, dynamic=false, dynamicNodeProperties=null, capabilities=null}]
+2022-01-10 14:59:51.520  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.handler.ReceiveLinkHandler     : onLinkRemoteOpen connectionId[MF_a61cc2_1641797988413], entityPath[$cbs], linkN
+ame[cbs:receiver], remoteSource[Source{address='$cbs', durable=NONE, expiryPolicy=SESSION_END, timeout=0, dynamic=false, dynamicNodeProperties=null, distributionMode=null, filter=n
+ull, defaultOutcome=null, outcomes=null, capabilities=null}]
+2022-01-10 14:59:51.535  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.RequestResponseChannel:$cbs    : namespace[MF_a61cc2_1641797988413] entityPath[$cbs]: Channel is now active.
+2022-01-10 14:59:51.852  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.ActiveClientTokenManager       : Scheduling refresh token task. scopes[amqp://testsb-hl.servicebus.windows.net/s
+mallsizequeue]
+2022-01-10 14:59:51.883  INFO 20140 --- [ctor-executor-1] c.a.c.a.implementation.ReactorSession    : connectionId[MF_a61cc2_1641797988413] sessionId[smallsizequeue] linkName[smalls
+izequeue_e14a7a_1641797988460] Creating a new receiver link.
+2022-01-10 14:59:51.890  INFO 20140 --- [ctor-executor-1] c.a.m.s.i.ServiceBusReceiveLinkProcessor : linkName[smallsizequeue_e14a7a_1641797988460] entityPath[smallsizequeue]. Setti
+ng next AMQP receive link.
+2022-01-10 14:59:51.906  INFO 20140 --- [ctor-executor-1] c.a.m.s.i.ServiceBusReceiveLinkProcessor : linkCredits: '0', expectedTotalCredit: '1'
+2022-01-10 14:59:51.906  INFO 20140 --- [ctor-executor-1] c.a.m.s.i.ServiceBusReceiveLinkProcessor : prefetch: '0', requested: '1', linkCredits: '0', expectedTotalCredit: '1', queu
+edMessages:'0', creditsToAdd: '1', messageQueue.size(): '0'
+2022-01-10 14:59:51.906  INFO 20140 --- [ctor-executor-1] c.a.m.s.i.ServiceBusReceiveLinkProcessor : Link credits='0', Link credits to add: '1'
+2022-01-10 14:59:51.906  INFO 20140 --- [ctor-executor-1] c.a.c.a.implementation.ReactorSession    : linkName[smallsizequeue_e14a7a_1641797988460] entityPath[smallsizequeue] Return
+ing existing receive link.
+2022-01-10 14:59:52.207  INFO 20140 --- [ctor-executor-1] c.a.c.a.i.handler.ReceiveLinkHandler     : onLinkRemoteOpen connectionId[MF_a61cc2_1641797988413], entityPath[smallsizeque
+ue], linkName[smallsizequeue_e14a7a_1641797988460], remoteSource[Source{address='smallsizequeue', durable=NONE, expiryPolicy=SESSION_END, timeout=0, dynamic=false, dynamicNodePrope
+rties=null, distributionMode=null, filter=null, defaultOutcome=null, outcomes=null, capabilities=null}]
+2022-01-10 14:59:58.228  INFO 20140 --- [oundedElastic-3] c.a.m.servicebus.FluxAutoComplete        : ON NEXT: Passing message downstream. sequenceNumber[165]
+FluxAutoComplete acquire semaphore
+2022-01-10 14:59:58.228  INFO 20140 --- [oundedElastic-3] c.a.m.s.i.ServiceBusReceiveLinkProcessor : linkCredits: '0', expectedTotalCredit: '2'
+process message
+2022-01-10 14:59:58.228  INFO 20140 --- [oundedElastic-3] c.a.m.s.i.ServiceBusReceiveLinkProcessor : prefetch: '0', requested: '2', linkCredits: '0', expectedTotalCredit: '2', queu
+edMessages:'1', creditsToAdd: '1', messageQueue.size(): '0'
+2022-01-10 14:59:58.241  INFO 20140 --- [oundedElastic-3] c.a.m.s.i.ServiceBusReceiveLinkProcessor : Link credits='0', Link credits to add: '1'
+2022-01-10 14:59:58.241  INFO 20140 --- [oundedElastic-3] c.a.m.s.ServiceBusReceiverAsyncClient    : smallsizequeue: Update started. Disposition: COMPLETED. Lock: 66818b05-e182-498
+5-a471-98bea55407b2. SessionId: null.
+process error
+--> ctrl+c
+2022-01-10 14:59:58.242  WARN 20140 --- [oundedElastic-2] c.a.m.s.ServiceBusProcessorClient        : Error when processing message. Abandoning message.
+2022-01-10 14:59:58.242  INFO 20140 --- [oundedElastic-2] c.a.m.s.ServiceBusReceiverAsyncClient    : smallsizequeue: Update started. Disposition: ABANDONED. Lock: 66818b05-e182-498
+5-a471-98bea55407b2. SessionId: null.
+2022-01-10 14:59:58.860  INFO 20140 --- [ctor-executor-1] c.a.m.s.ServiceBusReceiverAsyncClient    : smallsizequeue: Update completed. Disposition: ABANDONED. Lock: 66818b05-e182-4
+985-a471-98bea55407b2.
+2022-01-10 14:59:58.876  INFO 20140 --- [oundedElastic-2] c.a.m.s.ServiceBusProcessorClient        : Requesting 1 more message from upstream
+ServiceBusProcessorClient close() start
+2022-01-10 15:08:32.700  INFO 20140 --- [ionShutdownHook] c.a.m.s.ServiceBusReceiverAsyncClient    : Removing receiver links.
+2022-01-10 15:08:32.700  INFO 20140 --- [ionShutdownHook] c.a.m.s.ServiceBusClientBuilder          : Closing a dependent client. # of open clients: 0
+2022-01-10 15:08:32.700  INFO 20140 --- [ionShutdownHook] c.a.m.s.ServiceBusClientBuilder          : No more open clients, closing shared connection [ServiceBusConnectionProcessor]
+.
+2022-01-10 15:08:32.700  INFO 20140 --- [ionShutdownHook] c.a.m.s.i.ServiceBusConnectionProcessor  : Upstream connection publisher was completed. Terminating processor.
+2022-01-10 15:08:32.700  INFO 20140 --- [ionShutdownHook] c.a.m.s.i.ServiceBusConnectionProcessor  : namespace[testsb-hl.servicebus.windows.net] entityPath[N/A]: AMQP channel proce
+ssor completed. Notifying 0 subscribers.
+2022-01-10 15:08:32.700  INFO 20140 --- [ionShutdownHook] c.a.c.a.i.ReactorConnection              : connectionId[MF_a61cc2_1641797988413] signal[Disposed by client., isTransient[f
+alse], initiatedByClient[true]]: Disposing of ReactorConnection.
+2022-01-10 15:08:32.721  INFO 20140 --- [ionShutdownHook] c.a.m.s.i.ServiceBusConnectionProcessor  : namespace[testsb-hl.servicebus.windows.net] entityPath[N/A]: Channel is dispose
+d.
+2022-01-10 15:08:32.721  WARN 20140 --- [oundedElastic-3] c.a.m.servicebus.FluxAutoComplete        : Unable to 'complete' message.
+java.lang.InterruptedException
+2022-01-10 15:08:32.731 ERROR 20140 --- [oundedElastic-3] reactor.core.publisher.Operators         : Operator called default onErrorDropped
+
+reactor.core.Exceptions$ReactiveException: java.lang.InterruptedException
+        at reactor.core.Exceptions.propagate(Exceptions.java:392) ~[reactor-core-3.4.12.jar!/:3.4.12]
+        at reactor.core.publisher.BlockingSingleSubscriber.blockingGet(BlockingSingleSubscriber.java:91) ~[reactor-core-3.4.12.jar!/:3.4.12]
+        at reactor.core.publisher.Mono.block(Mono.java:1707) ~[reactor-core-3.4.12.jar!/:3.4.12]
+        at com.azure.messaging.servicebus.FluxAutoComplete$AutoCompleteSubscriber.applyWithCatch(FluxAutoComplete.java:144) ~[classes!/:0.0.1-SNAPSHOT]
+        at com.azure.messaging.servicebus.FluxAutoComplete$AutoCompleteSubscriber.hookOnNext(FluxAutoComplete.java:91) ~[classes!/:0.0.1-SNAPSHOT]
+        at com.azure.messaging.servicebus.FluxAutoComplete$AutoCompleteSubscriber.hookOnNext(FluxAutoComplete.java:52) ~[classes!/:0.0.1-SNAPSHOT]
+        at reactor.core.publisher.BaseSubscriber.onNext(BaseSubscriber.java:160) ~[reactor-core-3.4.12.jar!/:3.4.12]
+        at com.azure.messaging.servicebus.FluxAutoLockRenew$LockRenewSubscriber.hookOnNext(FluxAutoLockRenew.java:171) ~[classes!/:0.0.1-SNAPSHOT]
+        at com.azure.messaging.servicebus.FluxAutoLockRenew$LockRenewSubscriber.hookOnNext(FluxAutoLockRenew.java:76) ~[classes!/:0.0.1-SNAPSHOT]
+        at reactor.core.publisher.BaseSubscriber.onNext(BaseSubscriber.java:160) ~[reactor-core-3.4.12.jar!/:3.4.12]
+        at reactor.core.publisher.FluxMap$MapSubscriber.onNext(FluxMap.java:120) ~[reactor-core-3.4.12.jar!/:3.4.12]
+        at reactor.core.publisher.FluxMap$MapSubscriber.onNext(FluxMap.java:120) ~[reactor-core-3.4.12.jar!/:3.4.12]
+        at com.azure.messaging.servicebus.implementation.ServiceBusReceiveLinkProcessor.drainQueue(ServiceBusReceiveLinkProcessor.java:478) ~[classes!/:0.0.1-SNAPSHOT]
+        at com.azure.messaging.servicebus.implementation.ServiceBusReceiveLinkProcessor.drain(ServiceBusReceiveLinkProcessor.java:437) ~[classes!/:0.0.1-SNAPSHOT]
+        at com.azure.messaging.servicebus.implementation.ServiceBusReceiveLinkProcessor.lambda$onNext$2(ServiceBusReceiveLinkProcessor.java:210) ~[classes!/:0.0.1-SNAPSHOT]
+        at reactor.core.publisher.LambdaSubscriber.onNext(LambdaSubscriber.java:160) ~[reactor-core-3.4.12.jar!/:3.4.12]
+        at reactor.core.publisher.FluxPublishOn$PublishOnSubscriber.runAsync(FluxPublishOn.java:440) ~[reactor-core-3.4.12.jar!/:3.4.12]
+        at reactor.core.publisher.FluxPublishOn$PublishOnSubscriber.run(FluxPublishOn.java:527) ~[reactor-core-3.4.12.jar!/:3.4.12]
+        at reactor.core.scheduler.WorkerTask.call(WorkerTask.java:84) ~[reactor-core-3.4.12.jar!/:3.4.12]
+        at reactor.core.scheduler.WorkerTask.call(WorkerTask.java:37) ~[reactor-core-3.4.12.jar!/:3.4.12]
+        at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264) ~[na:na]
+        at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304) ~[na:na]
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+        at java.base/java.lang.Thread.run(Thread.java:833) ~[na:na]
+Caused by: java.lang.InterruptedException: null
+        at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireSharedInterruptibly(AbstractQueuedSynchronizer.java:1048) ~[na:na]
+        at java.base/java.util.concurrent.CountDownLatch.await(CountDownLatch.java:230) ~[na:na]
+        at reactor.core.publisher.BlockingSingleSubscriber.blockingGet(BlockingSingleSubscriber.java:87) ~[reactor-core-3.4.12.jar!/:3.4.12]
+        ... 23 common frames omitted
+
+2022-01-10 15:08:32.731  INFO 20140 --- [oundedElastic-3] c.a.m.servicebus.FluxAutoComplete        : ON NEXT: Finished. sequenceNumber[165]
+FluxAutoComplete release semaphore
+ServiceBusProcessorClient close() asyncClient shutdown
+ServiceBusProcessorClient close() end
+
+```
+[log for not adding timeout]
+```
+2022-01-10 16:26:43.899  INFO 26320 --- [lication.main()] c.s.demo.DemoSpringBootApplication       : Starting DemoSpringBootApplication using Java 17.0.1 on haolindong-712 with PID 26320 (C:\workspace\servicebus-test\target\classes started by haolingdong in C:\workspace\servicebus-test)
+2022-01-10 16:26:43.903  INFO 26320 --- [lication.main()] c.s.demo.DemoSpringBootApplication       : No active profile set, falling back to default profiles: default
+2022-01-10 16:26:44.712  INFO 26320 --- [lication.main()] c.a.m.s.i.ServiceBusConnectionProcessor  : namespace[testsb-hl.servicebus.windows.net] entityPath[N/A]: Setting next AMQP channel.
+2022-01-10 16:26:44.728  INFO 26320 --- [lication.main()] c.a.m.s.i.ServiceBusConnectionProcessor  : namespace[testsb-hl.servicebus.windows.net] entityPath[N/A]: Next AMQP channel received, updating 0 current subscribers
+2022-01-10 16:26:44.728  INFO 26320 --- [lication.main()] c.a.m.s.ServiceBusClientBuilder          : # of open clients with shared connection: 1
+2022-01-10 16:26:44.752  INFO 26320 --- [lication.main()] c.a.m.s.ServiceBusReceiverAsyncClient    : smallsizequeue: Creating consumer for link 'smallsizequeue_37d1da_1641803204752'
+2022-01-10 16:26:44.752  INFO 26320 --- [lication.main()] c.a.m.s.i.ServiceBusReceiveLinkProcessor : Requesting a new AmqpReceiveLink from upstream.
+2022-01-10 16:26:44.767  INFO 26320 --- [lication.main()] c.a.c.a.i.ReactorConnection              : connectionId[MF_812b28_1641803204681]: Creating and starting connection to testsb-hl.servicebus.windows.net:5671
+2022-01-10 16:26:44.830  INFO 26320 --- [lication.main()] c.a.c.a.implementation.ReactorExecutor   : connectionId[MF_812b28_1641803204681] message[Starting reactor.]
+2022-01-10 16:26:44.834  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.handler.ConnectionHandler      : onConnectionInit connectionId[MF_812b28_1641803204681] hostname[testsb-hl.servicebus.windows.net] amqpHostname[testsb-hl.servicebus.windows.net]
+2022-01-10 16:26:44.834  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.handler.ReactorHandler         : connectionId[MF_812b28_1641803204681] reactor.onReactorInit
+2022-01-10 16:26:44.834  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.handler.ConnectionHandler      : onConnectionLocalOpen connectionId[MF_812b28_1641803204681] hostname[testsb-hl.servicebus.windows.net] errorCondition[null] errorDescription[null]
+2022-01-10 16:26:44.864  INFO 26320 --- [lication.main()] c.a.m.servicebus.FluxAutoComplete        : Subscription received. Subscribing downstream. reactor.core.publisher.FluxMap$MapSubscriber@1fafe3a8
+2022-01-10 16:26:44.864  INFO 26320 --- [lication.main()] f.a.AutowiredAnnotationBeanPostProcessor : Autowired annotation is not supported on static fields: static com.azure.messaging.servicebus.ServiceBusProcessorClient com.servicebus.demo.ServiceBusMessageHandler.serviceBusProcessorClient
+2022-01-10 16:26:44.983  INFO 26320 --- [lication.main()] c.s.demo.DemoSpringBootApplication       : Started DemoSpringBootApplication in 1.495 seconds (JVM running for 8.605)
+2022-01-10 16:26:44.998  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.handler.ConnectionHandler      : onConnectionBound connectionId[MF_812b28_1641803204681] hostname[testsb-hl.servicebus.windows.net] peerDetails[testsb-hl.servicebus.windows.net:5671]
+2022-01-10 16:26:46.918  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.handler.ConnectionHandler      : onConnectionRemoteOpen hostname[testsb-hl.servicebus.windows.net], connectionId[MF_812b28_1641803204681], remoteContainer[9c2604c2da8a493ca0a6d86dba2f5936_G13]
+2022-01-10 16:26:46.918  INFO 26320 --- [ctor-executor-1] c.a.m.s.i.ServiceBusConnectionProcessor  : namespace[testsb-hl.servicebus.windows.net] entityPath[N/A]: Channel is now active.
+2022-01-10 16:26:47.241  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.handler.SessionHandler         : onSessionRemoteOpen connectionId[MF_812b28_1641803204681], entityName[smallsizequeue], sessionIncCapacity[0], sessionOutgoingWindow[2147483647]
+2022-01-10 16:26:47.272  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.ReactorConnection              : Setting CBS channel.
+2022-01-10 16:26:47.557  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.handler.SessionHandler         : onSessionRemoteOpen connectionId[MF_812b28_1641803204681], entityName[cbs-session], sessionIncCapacity[0], sessionOutgoingWindow[2147483647]
+2022-01-10 16:26:47.588  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.ReactorConnection              : connectionId[MF_812b28_1641803204681] entityPath[$cbs] linkName[cbs] Emitting new response channel.
+2022-01-10 16:26:47.588  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.RequestResponseChannel:$cbs    : namespace[MF_812b28_1641803204681] entityPath[$cbs]: Setting next AMQP channel.
+2022-01-10 16:26:47.588  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.RequestResponseChannel:$cbs    : namespace[MF_812b28_1641803204681] entityPath[$cbs]: Next AMQP channel received, updating 1 current subscribers
+2022-01-10 16:26:47.905  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.handler.SendLinkHandler        : onLinkRemoteOpen connectionId[MF_812b28_1641803204681], entityPath[$cbs], linkName[cbs:sender], remoteTarget[Target{address='$cbs', durable=NONE, expiryPolicy=SESSION_END, timeout=0, dynamic=false, dynamicNodePr
+operties=null, capabilities=null}]
+2022-01-10 16:26:47.905  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.handler.ReceiveLinkHandler     : onLinkRemoteOpen connectionId[MF_812b28_1641803204681], entityPath[$cbs], linkName[cbs:receiver], remoteSource[Source{address='$cbs', durable=NONE, expiryPolicy=SESSION_END, timeout=0, dynamic=false, dynamicNode
+Properties=null, distributionMode=null, filter=null, defaultOutcome=null, outcomes=null, capabilities=null}]
+2022-01-10 16:26:47.905  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.RequestResponseChannel:$cbs    : namespace[MF_812b28_1641803204681] entityPath[$cbs]: Channel is now active.
+2022-01-10 16:26:48.221  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.ActiveClientTokenManager       : Scheduling refresh token task. scopes[amqp://testsb-hl.servicebus.windows.net/smallsizequeue]
+2022-01-10 16:26:48.243  INFO 26320 --- [ctor-executor-1] c.a.c.a.implementation.ReactorSession    : connectionId[MF_812b28_1641803204681] sessionId[smallsizequeue] linkName[smallsizequeue_37d1da_1641803204752] Creating a new receiver link.
+2022-01-10 16:26:48.243  INFO 26320 --- [ctor-executor-1] c.a.m.s.i.ServiceBusReceiveLinkProcessor : linkName[smallsizequeue_37d1da_1641803204752] entityPath[smallsizequeue]. Setting next AMQP receive link.
+2022-01-10 16:26:48.259  INFO 26320 --- [ctor-executor-1] c.a.m.s.i.ServiceBusReceiveLinkProcessor : linkCredits: '0', expectedTotalCredit: '1'
+2022-01-10 16:26:48.259  INFO 26320 --- [ctor-executor-1] c.a.m.s.i.ServiceBusReceiveLinkProcessor : prefetch: '0', requested: '1', linkCredits: '0', expectedTotalCredit: '1', queuedMessages:'0', creditsToAdd: '1', messageQueue.size(): '0'
+2022-01-10 16:26:48.259  INFO 26320 --- [ctor-executor-1] c.a.m.s.i.ServiceBusReceiveLinkProcessor : Link credits='0', Link credits to add: '1'
+2022-01-10 16:26:48.259  INFO 26320 --- [ctor-executor-1] c.a.c.a.implementation.ReactorSession    : linkName[smallsizequeue_37d1da_1641803204752] entityPath[smallsizequeue] Returning existing receive link.
+2022-01-10 16:26:48.562  INFO 26320 --- [ctor-executor-1] c.a.c.a.i.handler.ReceiveLinkHandler     : onLinkRemoteOpen connectionId[MF_812b28_1641803204681], entityPath[smallsizequeue], linkName[smallsizequeue_37d1da_1641803204752], remoteSource[Source{address='smallsizequeue', durable=NONE, expiryPolicy=SESSION
+_END, timeout=0, dynamic=false, dynamicNodeProperties=null, distributionMode=null, filter=null, defaultOutcome=null, outcomes=null, capabilities=null}]
+2022-01-10 16:26:48.609  INFO 26320 --- [oundedElastic-3] c.a.m.servicebus.FluxAutoComplete        : ON NEXT: Passing message downstream. sequenceNumber[166]
+FluxAutoComplete acquire semaphore
+2022-01-10 16:26:48.609  INFO 26320 --- [oundedElastic-3] c.a.m.s.i.ServiceBusReceiveLinkProcessor : linkCredits: '0', expectedToprocess message
+talCredit: '2'
+2022-01-10 16:26:48.635  INFO 26320 --- [oundedElastic-3] c.a.m.s.i.ServiceBusReceiveLinkProcessor : prefetch: '0', requested: '2', linkCredits: '0', expectedTotalCredit: '2', queuedMessages:'1', creditsToAdd: '1', messageQueue.size(): '0'
+2022-01-10 16:26:48.635  INFO 26320 --- [oundedElastic-3] c.a.m.s.i.ServiceBusReceiveLinkProcessor : Link credits='0', Link credits to add: '1'
+process error
+--> ctrl+c
+2022-01-10 16:26:48.635  WARN 26320 --- [oundedElastic-2] c.a.m.s.ServiceBusProcessorClient        : Error when processing message. Abandoning message.
+2022-01-10 16:26:48.635  INFO 26320 --- [oundedElastic-3] c.a.m.s.ServiceBusReceiverAsyncClient    : smallsizequeue: Update started. Disposition: COMPLETED. Lock: 138ca674-910d-443a-91b4-0a1fd1c968b5. SessionId: null.
+2022-01-10 16:26:48.635  INFO 26320 --- [oundedElastic-2] c.a.m.s.ServiceBusReceiverAsyncClient    : smallsizequeue: Update started. Disposition: ABANDONED. Lock: 138ca674-910d-443a-91b4-0a1fd1c968b5. SessionId: null.
+2022-01-10 16:26:49.239  INFO 26320 --- [ctor-executor-1] c.a.m.s.ServiceBusReceiverAsyncClient    : smallsizequeue: Update completed. Disposition: ABANDONED. Lock: 138ca674-910d-443a-91b4-0a1fd1c968b5.
+2022-01-10 16:26:49.245  INFO 26320 --- [oundedElastic-2] c.a.m.s.ServiceBusProcessorClient        : Requesting 1 more message from upstream
+ServiceBusProcessorClient close() start
+```
