@@ -162,7 +162,7 @@ When defing ServiceBusProcessorClient as bean, after sending ctrl-c event. Sprin
 ```java
 @Configuration
 public class ServiceBusTestConfiguration {
-    static String connectionString = "Endpoint=sb://testsb-hl.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=omXzcCxktQVAJIyVGtkY03ETZG7ubPA++QicRc87ihM=";
+    static String connectionString = "<connection-string>";
     static String queueName = "smallsizequeue";
 
     @Bean( initMethod = "start", destroyMethod = "")
