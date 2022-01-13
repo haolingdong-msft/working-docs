@@ -353,9 +353,9 @@ try {
 
 In conclusion, `completionLock.acquire()` stucks because `applyWithCatch(onComplete, value, "complete");` in `FluxAutoComplete.java` stucks. 
 
-When processing message throws error, it will start ABANDON and COMPLETE proccess in parrallel (each process happens in one thread). If ABANDON finished earlier, then COMPLETE stucks, so the lock can't be released and ctrl-c can't terminate. If CONPLETED finished earlier, the lock can be released and ctrl-c can terminate. The ABANDON process and COMPLETE process seem to have impact on each other and can only finish one of them. That also explains we can't 100% reproduce the issue.
+When processing message throws error, it will start ABANDON and COMPLETE proccess in parrallel (each process happens in one thread). If ABANDON finished earlier, then COMPLETE stucks, so the lock can't be released and ctrl-c can't terminate. If COMPLETED finished earlier, the lock can be released and ctrl-c can terminate. The ABANDON process and COMPLETE process seem to have impact on each other and can only finish one of them. That also explains we can't 100% reproduce the issue.
 
-A potential fix would be to make `downstream.onNext(value);` and `applyWithCatch(onComplete, value, "complete");` happen in sequence. We ABANDON message on error and COMPLETE message on success. 
+A potential fix would be to make `downstream.onNext(value);` and `applyWithCatch(onComplete, value, "complete");` happen in sequence. (Through don't know how to make `downstream.onNext(value);` not bing async) We ABANDON message on error and COMPLETE message on success. 
 
 But this brings up a question that: when `processMessage()` throws error, current behavior is that it will start ABANDON and COMPLETE in parallel, rather than only sending ABANDON. So would like to know is it by design to both ABANDON and COMPLETE message on error? (My gut feeling is that it makes more sense to ABANDON message on error and to COMPLETE message on success.)
 
