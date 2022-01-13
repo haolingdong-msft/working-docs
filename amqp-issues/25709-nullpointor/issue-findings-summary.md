@@ -317,6 +317,118 @@ In conclusion, the issue is caused by [`completionLock.acquire()`](https://githu
 
 The `completionLock` is released in `finally` block [here](https://github.com/haolingdong-msft/azure-sdk-for-java/blob/main/sdk/servicebus/azure-messaging-servicebus/src/main/java/com/azure/messaging/servicebus/FluxAutoComplete.java#L98-L98). Not sure why sometimes it can not be released.
 
+## Analysis on why `completionLock.acquire()` stucks
+
+By comparing the logs happens before ctrl-c (logs can be found at the end of this section). We have below findings:
+
+* `FluxAutoComplete.java` handles message with two steps:
+  
+  In `downstream.onNext`, it calls `ServiceBusProcessorClient` `onNext()` hook and will **abandon** message on error [here](https://github.com/haolingdong-msft/azure-sdk-for-java/blob/f99ed77b4b04214360a6b27d5c7f03af1903ee40/sdk/servicebus/azure-messaging-servicebus/src/main/java/com/azure/messaging/servicebus/.ServiceBusProcessorClient.java#L302-L302). 
+  
+  It also calls `applyWithCatch(onComplete, value, "complete");` to **complete** message. From the log you will see ABANDON and COMPLETED happens in different thread. **ABANDON and COMPLETED happen in parallel.**
+  
+  Please also notice that `ServiceBusProcessorClient.java` uses `catch` to handle error [here](https://github.com/haolingdong-msft/azure-sdk-for-java/blob/f99ed77b4b04214360a6b27d5c7f03af1903ee40/sdk/servicebus/azure-messaging-servicebus/src/main/java/com/azure/messaging/servicebus/ServiceBusProcessorClient.java#L297-L303). The `catch` block in `FluxAutoComplete.java` to abandon message **never** get chance to run.
+```java
+try {
+    downstream.onNext(value);
+    applyWithCatch(onComplete, value, "complete");
+} catch (Exception e) {
+    logger.error("Error occurred processing message. Abandoning. sequenceNumber[{}]",
+        sequenceNumber, e);
+
+    applyWithCatch(onAbandon, value, "abandon");
+} finally {
+    logger.info("ON NEXT: Finished. sequenceNumber[{}]", sequenceNumber);
+    System.out.println("FluxAutoComplete release semaphore");
+    semaphore.release();
+}
+```
+
+* When ctrl-c can't terminate, we will find the log
+  `smallsizequeue: Update started. Disposition: COMPLETED. Lock: 673a8a82-35e9-40e5-8197-eee3741f31c8. SessionId: null.`. But no `smallsizequeue: Update completed. Disposition: COMPLETED. Lock: 09ae1203-5e23-4bfd-a034-34cd6e03fb26.` log found. It means disposition status COMPLETED is never completed. Disposition status 'ABANDON' has started and completed successfully. It stucks at `applyWithCatch(onComplete, value, "complete");` and could never go to `finally` block to release semaphore.
+
+* When ctrl-c can termiate, we will find the opposite behavior. ABANDON status is started but not completed, but COMPLETED status is started and completed successfully. Since `applyWithCatch(onComplete, value, "complete");` completed, it can go to `finally` block to release semaphore.
+
+* The ABANDON process and COMPLETE process seem to have impact on each other and can only finish one of them.
+
+In conclusion, `completionLock.acquire()` stucks because `applyWithCatch(onComplete, value, "complete");` in `FluxAutoComplete.java` stucks. 
+
+When processing message throws error, it will start ABANDON and COMPLETE proccess in parrallel (each process happens in one thread). If ABANDON finished earlier, then COMPLETE stucks, so the lock can't be released and ctrl-c can't terminate. If CONPLETED finished earlier, the lock can be released and ctrl-c can terminate. The ABANDON process and COMPLETE process seem to have impact on each other and can only finish one of them. That also explains we can't 100% reproduce the issue.
+
+A potential fix would be to make `downstream.onNext(value);` and `applyWithCatch(onComplete, value, "complete");` happen in sequence. We ABANDON message on error and COMPLETE message on success. 
+
+But this brings up a question that: when `processMessage()` throws error, current behavior is that it will start ABANDON and COMPLETE in parallel, rather than only sending ABANDON. So would like to know is it by design to both ABANDON and COMPLETE message on error? (My gut feeling is that it makes more sense to ABANDON message on error and to COMPLETE message on success.)
+
+[ctrl-c can't terminate log]
+```ctrl-c can't terminate log
+2021-12-27 14:56:43.452  INFO 13408 --- [ctor-executor-1] c.a.c.a.i.handler.ReceiveLinkHandler     : onLinkRemoteOpen connectionId[MF_8feec4_1640588199433], entityPath[smallsizequeue], linkName[smallsizequeue_2a68a7_1640588199495], remoteSource[Source{address='smallsizequeue', durable=NONE, expiryPolicy=SESSION
+_END, timeout=0, dynamic=false, dynamicNodeProperties=null, distributionMode=null, filter=null, defaultOutcome=null, outcomes=null, capabilities=null}]
+2021-12-27 14:56:43.499  INFO 13408 --- [oundedElastic-3] c.a.m.servicebus.FluxAutoComplete        : ON NEXT: Passing message downstream. sequenceNumber[135]
+FluxAutoComplete acquire semaphore
+process message
+2021-12-27 14:56:43.505  INFO 13408 --- [oundedElastic-3] c.a.m.s.i.ServiceBusReceiveLinkProcessor : linkCredits: '0', expectedTotalCredit: '2'
+2021-12-27 14:56:43.508  INFO 13408 --- [oundedElastic-3] c.a.m.s.i.ServiceBusReceiveLinkProcessor : prefetch: '0', requested: '2', linkCredits: '0', expectedTotalCredit: '2', queuedMessages:'1', creditsToAdd: '1', messageQueue.size(): '0'
+2021-12-27 14:56:43.508  INFO 13408 --- [oundedElastic-3] c.a.m.s.i.ServiceBusReceiveLinkProcessor : Link credits='0', Link credits to add: '1'
+process error
+2021-12-27 14:56:43.508  INFO 13408 --- [oundedElastic-3] c.a.m.s.ServiceBusReceiverAsyncClient    : smallsizequeue: Update started. Disposition: COMPLETED. Lock: 673a8a82-35e9-40e5-8197-eee3741f31c8. SessionId: null.
+2021-12-27 14:56:43.514  WARN 13408 --- [oundedElastic-2] c.a.m.s.ServiceBusProcessorClient        : Error when processing message. Abandoning message.
+2021-12-27 14:56:43.514  INFO 13408 --- [oundedElastic-2] c.a.m.s.ServiceBusReceiverAsyncClient    : smallsizequeue: Update started. Disposition: ABANDONED. Lock: 673a8a82-35e9-40e5-8197-eee3741f31c8. SessionId: null.
+2021-12-27 14:56:44.122  INFO 13408 --- [ctor-executor-1] c.a.m.s.ServiceBusReceiverAsyncClient    : smallsizequeue: Update completed. Disposition: ABANDONED. Lock: 673a8a82-35e9-40e5-8197-eee3741f31c8.
+2021-12-27 14:56:44.122  INFO 13408 --- [oundedElastic-2] c.a.m.s.ServiceBusProcessorClient        : Requesting 1 more message from upstream
+--> ctrl + c
+ServiceBusProcessorClient close() start
+ServiceBusProcessorClient close() subscription clear
+ServiceBusProcessorClient close() scheduledExecutor shutdown
+ServiceBusProcessorClient close() asyncClient not null
+ServiceBusReceiverAsyncClient close() start
+acquire completionLock java.util.concurrent.Semaphore@55a91cd4[Permits = 0]
+2021-12-27 15:06:44.206  INFO 13408 --- [ctor-executor-1] c.a.c.a.i.handler.ReceiveLinkHandler     : onLinkRemoteClose connectionId[MF_8feec4_1640588199433] linkName[smallsizequeue_2a68a7_1640588199495], errorCondition[amqp:link:detach-forced] errorDescription[The link 'G3:186414153:smallsizequeue_2a68a7_164058
+8199495' is force detached. Code: consumer(link23744312). Details: AmqpMessageConsumer.IdleTimerExpired: Idle timeout: 00:10:00. TrackingId:29b60df900000479016a4f3861c963ab_G3_B12, SystemTracker:testsb-hl:Queue:smallsizequeue, Timestamp:2021-12-27T07:06:44]
+```
+
+[ctrl-c terminate successful log]
+```ctrl-c can terminate log
+2021-12-23 11:58:28.736  INFO 11504 --- [ctor-executor-1] c.a.c.a.i.handler.ReceiveLinkHandler     : onLinkRemoteOpen connectionId[MF_f466b4_1640231904906], entityPath[smallsizequeue], linkName[smallsizequeue_2d0e38_1640231904982], remoteSource[Source{address='smallsizequeue', durable=NONE, expiryPolicy=SESSION
+_END, timeout=0, dynamic=false, dynamicNodeProperties=null, distributionMode=null, filter=null, defaultOutcome=null, outcomes=null, capabilities=null}]
+2021-12-23 11:58:28.797  INFO 11504 --- [oundedElastic-3] c.a.m.servicebus.FluxAutoComplete        : ON NEXT: Passing message downstream. sequenceNumber[131]
+FluxAutoComplete acquire semaphore
+process message
+2021-12-23 11:58:28.803  INFO 11504 --- [oundedElastic-3] c.a.m.s.i.ServiceBusReceiveLinkProcessor : linkCredits: '0', expectedTotalCredit: '2'
+2021-12-23 11:58:28.805  INFO 11504 --- [oundedElastic-3] c.a.m.s.i.ServiceBusReceiveLinkProcessor : prefetch: '0', requested: '2', linkCredits: '0', expectedTotalCredit: '2', queuedMessages:'1', creditsToAdd: '1', messageQueue.size(): '0'
+2021-12-23 11:58:28.806  INFO 11504 --- [oundedElastic-3] c.a.m.s.i.ServiceBusReceiveLinkProcessor : Link credits='0', Link credits to add: '1'
+process error
+2021-12-23 11:58:28.808  INFO 11504 --- [oundedElastic-3] c.a.m.s.ServiceBusReceiverAsyncClient    : smallsizequeue: Update started. Disposition: COMPLETED. Lock: 09ae1203-5e23-4bfd-a034-34cd6e03fb26. SessionId: null.
+2021-12-23 11:58:28.809  WARN 11504 --- [oundedElastic-2] c.a.m.s.ServiceBusProcessorClient        : Error when processing message. Abandoning message.
+2021-12-23 11:58:28.810  INFO 11504 --- [oundedElastic-2] c.a.m.s.ServiceBusReceiverAsyncClient    : smallsizequeue: Update started. Disposition: ABANDONED. Lock: 09ae1203-5e23-4bfd-a034-34cd6e03fb26. SessionId: null.
+2021-12-23 11:58:29.533  INFO 11504 --- [ctor-executor-1] c.a.m.s.ServiceBusReceiverAsyncClient    : smallsizequeue: Update completed. Disposition: COMPLETED. Lock: 09ae1203-5e23-4bfd-a034-34cd6e03fb26.
+2021-12-23 11:58:29.536  INFO 11504 --- [oundedElastic-3] c.a.m.servicebus.FluxAutoComplete        : ON NEXT: Finished. sequenceNumber[131]
+FluxAutoComplete release semaphore
+2021-12-23 11:58:29.543  INFO 11504 --- [oundedElastic-3] c.a.m.servicebus.FluxAutoComplete        : ON NEXT: Passing message downstream. sequenceNumber[132]
+2022-01-04 13:40:28.826  INFO 25568 --- [ionShutdownHook] c.a.m.s.ServiceBusReceiverAsyncClient    : Removing receiver links.
+2022-01-04 13:40:28.826  INFO 25568 --- [ionShutdownHook] c.a.m.s.ServiceBusClientBuilder          : Closing a dependent client. # of open clients: 0
+2022-01-04 13:40:28.826  INFO 25568 --- [ionShutdownHook] c.a.m.s.ServiceBusClientBuilder          : No more open clients, closing shared connection [ServiceBusConnectionProcessor].
+2022-01-04 13:40:28.826  INFO 25568 --- [ionShutdownHook] c.a.m.s.i.ServiceBusConnectionProcessor  : Upstream connection publisher was completed. Terminating processor.
+2022-01-04 13:40:28.826  INFO 25568 --- [ionShutdownHook] c.a.m.s.i.ServiceBusConnectionProcessor  : namespace[testsb-hl.servicebus.windows.net] entityPath[N/A]: AMQP channel processor completed. Notifying 0 subscribers.
+2022-01-04 13:40:28.826  INFO 25568 --- [ionShutdownHook] c.a.c.a.i.ReactorConnection              : connectionId[MF_68376c_1641274817436] signal[Disposed by client., isTransient[false], initiatedByClient[true]]: Disposing of ReactorConnection.
+2022-01-04 13:40:28.826  INFO 25568 --- [ionShutdownHook] c.a.m.s.i.ServiceBusConnectionProcessor  : namespace[testsb-hl.servicebus.windows.net] entityPath[N/A]: Channel is disposed.
+---> ctrl+c
+ServiceBusProcessorClient close() start
+ServiceBusProcessorClient close() subscription clear
+ServiceBusProcessorClient close() scheduledExecutor shutdown
+ServiceBusProcessorClient close() asyncClient not null
+ServiceBusReceiverAsyncClient close() start
+acquire completionLock java.util.concurrent.Semaphore@1d794a2f[Permits = 1]
+try isDisposed.getAndSet(true)
+2021-12-22 14:05:10.165  INFO 15012 --- [ionShutdownHook] c.a.m.s.ServiceBusReceiverAsyncClient    : Removing receiver links.
+2021-12-22 14:05:10.167  INFO 15012 --- [ionShutdownHook] c.a.m.s.ServiceBusClientBuilder          : Closing a dependent client. # of open clients: 0
+2021-12-22 14:05:10.168  INFO 15012 --- [ionShutdownHook] c.a.m.s.ServiceBusClientBuilder          : No more open clients, closing shared connection [ServiceBusConnectionProcessor].
+2021-12-22 14:05:10.169  INFO 15012 --- [ionShutdownHook] c.a.m.s.i.ServiceBusConnectionProcessor  : Upstream connection publisher was completed. Terminating processor.
+2021-12-22 14:05:10.170  INFO 15012 --- [ionShutdownHook] c.a.m.s.i.ServiceBusConnectionProcessor  : namespace[testsb-hl.servicebus.windows.net] entityPath[N/A]: AMQP channel processor completed. Notifying 0 subscribers.
+2021-12-22 14:05:10.171  INFO 15012 --- [ionShutdownHook] c.a.c.a.i.ReactorConnection              : connectionId[MF_91434a_1640153092809] signal[Disposed by client., isTransient[false], initiatedByClient[true]]: Disposing of ReactorConnection.
+2021-12-22 14:05:10.172  INFO 15012 --- [ionShutdownHook] c.a.m.s.i.ServiceBusConnectionProcessor  : namespace[testsb-hl.servicebus.windows.net] entityPath[N/A]: Channel is disposed.
+ServiceBusProcessorClient close() asyncClient shutdown
+ServiceBusProcessorClient close() end
+```
 
 ## Mitigate issue on client side
 
