@@ -430,6 +430,117 @@ ServiceBusProcessorClient close() asyncClient shutdown
 ServiceBusProcessorClient close() end
 ```
 
+## Anaylze on why 'downstream.onNext(value)' return immediately
+
+The same issue was found in: https://gist.github.com/anuchandy/aa884392fb3470b8de1eea1f60ec415e
+
+To solve the issue that two messages COMPLETE and ABANDAN was sent out parrellel and cause the service stucks, it is better to understand why `downstream.onNext` return immediately first.  
+
+After checking the code, we found the `downstream` actually subscribe with `runOn(Schedlures.boundedElastic(), 1)`. 
+
+By using `Schedulers.boundedElastic()`, the `downstream` would always run on a new elastic thread, even though it was directly called by `onNext()`. So `downstream.onNext()` will immediately return and the function is running on a new thread. 
+
+```java
+//ServiceBusProcessorClient.java 
+//receiveMessages()
+receiverClient.receiveMessagesWithContext()
+    .parallel(processorOptions.getMaxConcurrentCalls(), 1)
+    .runOn(Schedulers.boundedElastic(), 1)
+    .subscribe(subscribers); //subscriber here is downstream in FluxAutoComplete.java
+```
+
+Below simple test code is to prove the behavior of using `Sheculers.boundedElastic()`. We mapped the service bus class to keep them have same code structure:
+
+- `DownStreamSubscriber` represents for Class of subscribers[i]/downstream 
+- `UpStreamSubscriber` resprents for `AutoCompleteSubscriber`
+- `UpStreamOperator` reprents for `FluxAutoComplete`
+
+From log we could see that `DownStreamSubscriber.onNext()` was running on a new thread `[boundedElastic-1]`.
+
+```java
+public class TestReactor {
+    private static final ClientLogger logger = new ClientLogger(TestReactor.class);
+
+    static class DownStreamSubscriber implements CoreSubscriber<String> {
+        @Override
+        public void onSubscribe(Subscription subscription) {
+            subscription.request(1);
+        }
+
+        @Override
+        public void onNext(String string) {
+            logger.info("DownStreamSubscriber onNext process: " + string);
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+        }
+
+        @Override
+        public void onComplete() {
+        }
+    }
+
+    static class UpStreamSubscriber extends BaseSubscriber<String>{
+
+        private CoreSubscriber<String> downstream;
+
+        public UpStreamSubscriber(CoreSubscriber<String> downstream) {
+            this.downstream = downstream;
+        }
+
+        @Override
+        protected void hookOnSubscribe(Subscription subscription) {
+            downstream.onSubscribe(this);
+        }
+
+        @Override
+        protected void hookOnNext(String s) {
+            logger.info("UpStreamSubscriber onHookNext process: " + s);
+            downstream.onNext(s);
+            logger.info("UpStreamSubscriber onHookNext end");
+        }
+    }
+
+    static class UpStreamOperator extends FluxOperator<String, String>{
+        public UpStreamOperator(Flux<String> upstream){
+            super(upstream);
+        }
+
+        @Override
+        public void subscribe(CoreSubscriber downstream) {
+            CoreSubscriber subscriber = new UpStreamSubscriber(downstream);
+            source.subscribe(subscriber);
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        DownStreamSubscriber downstream = new DownStreamSubscriber();
+
+        Flux<String> sourcesData = Flux.just("1");
+        UpStreamOperator upStream = new UpStreamOperator(sourcesData);
+        upStream.parallel(3, 1).runOn(Schedulers.boundedElastic(), 1).subscribe(downstream);
+        latch.await(10, TimeUnit.SECONDS);
+    }
+}
+```
+
+Console log:
+```
+17:22:40.736 [main] DEBUG reactor.util.Loggers - Using Slf4j logging framework
+17:22:40.790 [main] INFO com.example.springbootapplication.TestReactor - UpStreamSubscriber onHookNext process: 1
+17:22:40.790 [main] INFO com.example.springbootapplication.TestReactor - UpStreamSubscriber onHookNext end
+17:22:40.790 [boundedElastic-1] INFO com.example.springbootapplication.TestReactor - DownStreamSubscriber onNext process: 1
+```
+
+In conclusion, it is `runOn(Schedlures.boundedElastic(), 1)` cause `downstream.onNext()` immediately return and that may cause the service stuck when `processMessage` throw any Exception. 
+
+However, we cannot simplely remove `runOn(Schedlures.boundedElastic(), 1)` to make `downstream.onNext()` and `applyWithCatch(onComplete, value, "complete")` happened sequencially since `runOn` may also related to prefetch function. The logic for `downstream.onNext()` and `applyWithCatch()` should be reconsidered. (Maybe put all logic in same code block to keep sequential?)
+
+Other question is after we remove `runOn(Schedlures.boundedElastic(), 1)`, application could sent out ABANDON message successfully, but the ABANDON status is not recorded by any place, the application would consume the same message and keep sending out ABANDON message again and again. Not sure if this is an expected behavior.  
+
+
 ## Mitigate issue on client side
 
 Try to unblock the customer use case (how to do graceful shutdown), we can try to modify the sample code in the processMessage() to catch exceptions from cx business logic and call processor stop() (to init the closure of underlying clients). Then rethrow the exception for bean to run the destroy/shutdown phase for other cleanups. 
