@@ -1,4 +1,6 @@
-### ADP cadl definition
+## ADP cadl definition example
+
+Here I listed two examples, one is a normal operation defined by ADP, another is a LRO operation defined by ADP.
 1. a general operation (non-LRO)
 
 This example is a normal operation in ADP. Live demo can be found [here](https://cadlplayground.z22.web.core.windows.net/cadl-azure/?c=aW1wb3J0ICJAY2FkbC1sYW5nL3Jlc3QiOwrJGmF6dXJlLXRvb2xzL8UmxhFjb3JlzCfKQW9wZW5hcGkiOwoKdXNpbmcgQ2FkbC5IdHRwO8wRUmVzdMgRQcRTLkNvcmXSEi5Gb3VuZGF0aW9uczsKCgoKICBpbnRlcmZhY2UgRGlzY292ZXJpZXMgewogICAgI3N1cHByZXNz%2FgC7L3VzZS1zdGFuZGFyZC1vcGVyxmIiICJBRFAgZGF0YS1wbGFuZSBBUEkgdXNlcyBjdXN0b20gySwuIsVxQGRvYygiQ3JlYXRlcyBhIG5ldyBpbmdlc8QkIGTnAKF5IGluxG9jZS4iKcU4Y8UyT3JSZXBs5ADLaXMgQ8ViUmVzb3VyY2XGU8khPMU2IOkA83ksxxHGNkJvZHlXcmFwcGVyPMkjxUNpb25QYXJhbWV0ZXJzPsU1PjsKICB95AFL5gC%2BQesAqHLHf%2BYAqEDIDygiyCNpZXPGG2ZyaWVuZGx5TmFtZSgiyXXFHW1vZGVs6gCs5wGdQGtlecUJaWQ6IHN0cmluZzvkAIboAIhJRCBvZiB0aGUgZXh0ZXJuYWwgcGFja2FnZSAoZm9yIGV4YW1wbGUsxSNkaXNrIHdoaWNoIGNvbnRhaW5lZOUBuSnHFndhc%2BQBumQgdXBvbsUz5QF05AGXb2YgdXBsb2Fk5wGNQHZpc2liaWxpdHkoInJlYWQiLCAixS5lxyLoAJFQ5gCQSWQ%2F8ADCZm9ybWF0KCJ1cmnIVuUA1SLmAihTQVMgc2ln5AClVVJJIOQAz%2BYAg%2BQC729yIMR2xAvnANvnAThtYW5pZmVzdCBmaWxlIG9u5gMZIFN0b3JhZ2UuxVpOb3RlLCBp5gE5yjtzdGF0dXPkAlgn5gJLZCfEIuYBCuQAg2lz6ACRd2l0aCAnV3JpdGUnIHBlcm1pc3PkAw4sIG90aGVyd2lzZcckUmVhZMwj5gCCVGhpc8VTZXhwaXJlcyBpbiAyNCBob3Vyc8YiIiL5AWrGGOgA6VXlARRVcmnuAWDrAq3qAlXoApzqAdhw6QLp5wK%2F9wKk8gMZxi%2FkAOVW6wCh6wIDxRxvdXRPbWl0dGVkUHLkBAl0aWVz6gMaeUnmAM7vAv3SbecDDy4uLskl5wOS6gDnSeQE5eQDAi3lAbHGVOQCNuUE%2FsQZdXPnAJr3AOVJZGVudGlmaWVy9ACWyh7oA53Fd1TtAkRpySXoBLfpA8NAbWluTGVuZ3RoKDHHG21heMcSMzbGE8lKSesD8ecA6QogIG9w%2FwT0xUVU5gTqVM4l5QFOcwogID7yBTtP6AWkzUHda03kAR48VD4gJtZp2kNkT3JPa1Jlc3BvbnNlPFTkBWI%2B5QK0%2FwaLxBHoAsItbWFuYWdlci9ub8QUxUstYm9keSIgIuUDXekGdiBtdXN0IHJldHVybiBh6APlbW9uaXTlAhwgaXRz5AMZxUPlBqNAYXV0b1JvdXRl9AFy6gEr6QD3LCBU5wD05QELxUrlAWXKLOUBDesHmS5JdGVtS2V5c09mykjlAUzsAT7JTucBI%2BQAnW9taXRLZXnqA0%2FpAqr%2FAa%2FlAa%2FJa8Vg5ASFcGRhdGVhYmxlylI8RGVmYXVsxGfqA9zKPCwg5gSIPucAk9p%2BZOsB5uoDw%2BkI3%2BQI08YfMjAx5QdjICBA5AHFIMQFOiBU6AL7ICBhbGlh9gfw8AJOID3WJ8wjfM8jzUHlAovoB%2Bd35ggi5QRIb3DkAbvlB2PnBJjkAj%2FkBGzkAK8uIOQECuQEbG505Acv5gEWaXMgdG8gYWRkIGRlc2NyacVDxBMnxDQn6wRo8giW6QE05QEUxQrECT%2FqARn2AXzuAQ%2FEQ%2FgBdTDlAXXvAXPmBGwK)
@@ -14,7 +16,7 @@ using Azure.Core;
 using Azure.Core.Foundations;
 
 
-// operation definition
+// ADP operation definition
 interface Discoveries {
   #suppress "@azure-tools/cadl-azure-core/use-standard-operations" "ADP data-plane API uses custom operation."
   @doc("Creates a new ingestion discovery instance.")
@@ -117,7 +119,7 @@ using OpenAPI;
 using Autorest;
 
 
-// operation definition
+// ADP operation definition
 interface Discoveries {
 
   #suppress "@azure-tools/cadl-azure-core/use-standard-operations" "ADP data-plane API uses custom LRO response template the LRO actions."
@@ -133,7 +135,7 @@ interface Discoveries {
   >;
 }
 
-// --------------------
+
 // ADP Discovery related models
 @doc("A discovery resource.")
 @resource("discoveries")
@@ -177,8 +179,8 @@ enum DiscoveryOperationTypeKV {
   AbortDiscovery: "AbortDiscovery",
 }
 
-//---------------
-// adp common models
+
+// ADP common models
 @doc("Default error response with custom header.")
 @friendlyName("CustomErrorResponseWithXMsErrorCodeHeader")
 model CustomErrorResponseWithXmsErrorCodeHeader is Foundations.ErrorResponse {
@@ -211,8 +213,7 @@ model CustomResourceOkResponse<T> {
 }
 
 
-// ---------
-// LRO related definitions
+// ADP LRO related definitions
 @action
 @autoRoute
 @segmentSeparator(":")
@@ -357,9 +358,17 @@ model LongRunningOperationBase<TOperationType = string, TStatusError = Azure.Cor
   ...CustomEtagProperty;
 }
 
-// --- Azure.Core.Foundation
+// Azure.Core.Foundation
 model AcceptedResponse<T = {}> is Cadl.Http.AcceptedResponse {
   ...T;
 }
 
 ```
+
+## Issues met during codegen
+
+- They have very complex definitions like Paging LRO, we can't support it yet.
+
+- Multiple methods have the same name and signature. They should be seperated into different clients, otherwise one client contains methods with the same signature, this will definitelly cause compliation error.
+
+- For ADP, since there is lots of operations and models, [API view](https://apiview.dev/Assemblies/Review/3b77bee6b3b940ad9c85df75cee51df1) is large and can be hard to review.
