@@ -185,6 +185,7 @@ public void upload(byte[] data, ContentType contentType) {
     BinaryData request = BinaryData.fromObject(requestObj);
     uploadWithResponse(contentType, request, requestOptions).getValue();
 }
+// For generating uploadStringOrResource():
 // Choose Option 1: we don't generate convenience method for uploadStringOrResource(), user just use the protocol method.
 // Choose Option 2: We can generate the convenience methd like option2.
 // Choose Option 3: Not applicable to this case?
