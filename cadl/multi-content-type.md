@@ -39,11 +39,11 @@ public Response<Void> uploadWithResponse(String contentType, BinaryData request,
 ```
 
 **Pros:** 
-1. Easy to extend the feature like generating convenience methods. 
+1. Easy to extend the feature, e.g. generate convenience methods. 
 2. Implementation cost low. 
 
 **Cons:**
-1. may be lack of usibility.
+1. May be lack of usibility.
 
 #### Option 2: Generate convenience methods according to content type and data type mapping
 
@@ -108,7 +108,7 @@ op uploadString(data: string, @header contentType: "text/plain" ): void;
 @overload(upload)
 op uploadBytes(data: bytes, @header contentType: "application/octet-stream" | "image/jpeg" | "image/png"): void;
 @overload(upload)
-op uploadStringOrResource(data: string | Resource, @header contentType: "text/plain" | "application/json"): void;
+op uploadStringOrResource(data: string | Resource, @header contentType: "text/plain" | "application/json"): void; // This case is triky, user might not define like this way, but want to bring this up since user can define this way, and it causes complexity in SDK.
 ```
 
 ### SDK:
@@ -141,18 +141,20 @@ public void upload(byte[] data, ContentType contentType) {
     BinaryData request = BinaryData.fromBytes(data);
     uploadWithResponse(contentType, request, requestOptions).getValue();
 }
+// For generating uploadStringOrResource():
 // Choose Option 1: we don't generate convenience method for uploadStringOrResource(), user just use the protocol method.
 // Choose Option 2: We can generate the convenience methd like option2.
 // Choose Option 2: Not applicable to this case?
 ```
 
 ### Open Questions
+
 - Currently we consider `@overload` as methods with the same. Another choice is we generate methods with different names: `uploadString`, `uploadBytes`, `uploadStringOrResource`, if with different names, overload operations are similar to general operations except the route is the same. Do we agree on considering `@overload` as methods with the same?
 - In the above example, we don't have conveniece method for `Resource` type. If user wants to send request with content type as "application/json", since he/she does not define overload method for it, he/she needs to use the protocol method to send the request. Do we need to generate convenient method for content types that does not define overload methods?
-- What if overload methods have same signature? shall we use different name? e.g.
+- What if overload methods have same signature from Java code perspective? shall we use different name? e.g.
 ```ts
 @overload(upload)
-op uploadImage(data: string, @header contentType: "image/jpeg" | "image/png"): void;
+op uploadImage(data: bytes, @header contentType: "image/jpeg" | "image/png"): void;
 @overload(upload)
 op uploadFile(data: bytes, @header contentType: "application/octet-stream"): void;
 ```
@@ -211,11 +213,10 @@ public void uploadImageJson() {
 There are still other cases that need to be considered.
 
 - `@overload` on response type
-Java can't overload on response type.
-(contentType): Ressource1
-(contentType): Ressource2
+ 
+Java can't overload on different return type, but same input parameter type.
 
-- `@overload` together with `@internal`, shall we keep the overload method name? [python gist](https://gist.github.com/msyyc/87a79b917deec25639f9f10d20589e55?permalink_comment_id=4472409#gistcomment-4472409)
+- `@overload` together with `@internal`, shall we keep the overload method name? [python decision](https://gist.github.com/msyyc/87a79b917deec25639f9f10d20589e55?permalink_comment_id=4472409#gistcomment-4472409)
 ```ts
 @doc("Using `@overload`")
 @route("/upload")
