@@ -174,7 +174,7 @@ op uploadImageJson(@body body: {imageBase64: bytes}, @header contentType: "appli
 
 ### SDK
 
-Here we don't have special logic to handle this case. We just treat them as general operations, except for the routings are the same.
+Here we don't want to have special logic to handle this case. We just treat them as general operations, except for the routings are the same.
 
 ```java
 @Generated
@@ -194,16 +194,18 @@ public Response<Void> uploadImageJsonWithResponse(BinaryData body, RequestOption
 public void uploadImageBytes(byte[] body) {
     // Generated convenience method for uploadImageBytesWithResponse
     RequestOptions requestOptions = new RequestOptions();
-    uploadImageBytesWithResponse(BinaryData.fromObject(body), requestOptions).getValue();
+    uploadImageBytesWithResponse(BinaryData.fromBytes(body), requestOptions).getValue();
 }
 
 
-@Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
-public void uploadImageJson() {
+public void uploadImageJson(byte[] imageBase64) {
     // Generated convenience method for uploadImageJsonWithResponse
     RequestOptions requestOptions = new RequestOptions();
-    uploadImageJsonWithResponse(body, requestOptions).getValue();
+    Map<String, Object> requestObj = new HashMap<>();
+    requestObj.put("imageBase64", imageBase64);
+    BinaryData request = BinaryData.fromObject(requestObj);
+    uploadImageJsonWithResponse(request, requestOptions).getValue();
 }
 ```
 
