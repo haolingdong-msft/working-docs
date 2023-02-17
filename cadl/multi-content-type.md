@@ -1,12 +1,12 @@
-# Multiple Content Type Design
+# **Multiple Content Type Design**
 
-## Use cases
+# Use cases
 
-### Case 1
+## Case 1
 
 In case 1, we define an operation with multiple data types and content types, without defining `@overload` decorator.
 
-#### Cadl
+### Cadl
 ```ts
 model Resource {
   @visibility("read")
@@ -24,11 +24,11 @@ model Resource {
 op upload(data: string | bytes | Resource, @header contentType: "text/plain" | "application/json" | "application/octet-stream" | "image/jpeg" | "image/png"): void;
 ```
 
-#### SDK
+### SDK
 
 I wrote three options on the generated SDK. For each options, I listed the pros and cons from my understanding.
 
-##### **Option 1: Generate protocol method only**
+#### **Option 1: Generate protocol method only**
 
 ```java
 @Generated
@@ -46,7 +46,7 @@ public Response<Void> uploadWithResponse(String contentType, BinaryData request,
 1. may be lack of usibility.
 
 
-##### **Option 2: Generate one convenience method**
+#### **Option 2: Generate one convenience method**
 
 In option 2, we will generate a convenience method that accepts a union base type and contentType.
 
@@ -78,7 +78,7 @@ public void upload(DataModelBase data, ContentType contentType) {
 2. If the user set the data, we don't infer content-type for them. (In cases that setting data can't determine content-type, e.g.content-type is "image/jpeg" or "image/png", it's fine. But in other cases, it may be lack of usibility)
 
 
-##### Option 3: Generate convenience methods according to content type and data type mapping
+#### Option 3: Generate convenience methods according to content type and data type mapping
 
 In Option 3, we don't expose union base class, but map the content type to modulerfour type, for each modulerfour type, we will find the corresponding data type and generate convenience method.
 
@@ -130,14 +130,14 @@ public void upload(Resource data) {
 1. Implementation cost high, hard to catch March GA.
 
 
-##### My preference
+#### My preference
 We use Option 1 for March GA, and extend it later using Option 3. 
 
-### Case 2
+## Case 2
 
 In case 2, we use @overload to define convenience methods.
 
-#### Cadl
+### Cadl
 ```ts
 @doc("Using `@overload`")
 @route("/upload")
@@ -150,7 +150,7 @@ op uploadBytes(data: bytes, @header contentType: "application/octet-stream" | "i
 op uploadStringOrResource(data: string | Resource, @header contentType: "text/plain" | "application/json"): void;
 ```
 
-#### SDK:
+### SDK:
 
 We will generate protocol method and convenient methods for the operations defined with @overload. For the operation `uploadStringOrResource`, it's a bit tricky, I wrote it as comment in below code snippet.
 
@@ -189,7 +189,7 @@ public void upload(byte[] data, ContentType contentType) {
 // Choose Option 3: Not applicable to this case?
 ```
 
-#### Open Questions
+### Open Questions
 - Currently we consider `@overload` as methods with the same. Another choice is we generate methods with different names: `uploadString`, `uploadBytes`, `uploadStringOrResource`, if with different names, overload operations are similar to general operations except the route is the same. Do we agree on considering `@overload` as methods with the same?
 - In the above example, we don't have conveniece method for `Resource` type. If user wants to send request with content type as "application/json", since he/she does not define overload method for it, he/she needs to use the protocol method to send the request. Do we need to generate convenient method for content types that does not define overload methods?
 - What if overload methods have same signature? shall we use different name? e.g.
@@ -200,12 +200,12 @@ op uploadImage(data: string, @header contentType: "image/jpeg" | "image/png"): v
 op uploadFile(data: bytes, @header contentType: "application/octet-stream"): void;
 ```
 
-### Case 3
+## Case 3
 
 In case 3, we use shared route feature to support multiple content types.
 
 
-#### Cadl
+### Cadl
 ```ts
 @doc("Using shared route")
 @route("/uploadImage", { shared: true })
@@ -214,7 +214,7 @@ op uploadImageBytes(@body body: bytes, @header contentType: "image/png"): void;
 op uploadImageJson(@body body: {imageBase64: bytes}, @header contentType: "application/json"): void;
 ```
 
-#### SDK
+### SDK
 
 Here we don't have special logic to handle this case. We just treat them as general operations, except for the routings are the same.
 
@@ -249,7 +249,7 @@ public void uploadImageJson() {
 }
 ```
 
-### Other Cases
+## Other Cases
 
 There are still other cases that need to be considered.
 
