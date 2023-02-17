@@ -257,8 +257,8 @@ public void uploadImageJson() {
 There are still other cases that need to be considered.
 
 - `@overload` on response type
-- 
-Java can't overload on response type.
+ 
+Java can't overload on different return type, but same input parameter type.
 
 - `@overload` together with `@internal`, shall we keep the overload method name? [python decision](https://gist.github.com/msyyc/87a79b917deec25639f9f10d20589e55?permalink_comment_id=4472409#gistcomment-4472409)
 ```ts
