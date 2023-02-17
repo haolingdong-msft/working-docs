@@ -166,46 +166,46 @@ In case 3, we use shared route feature to support multiple content types.
 ### Cadl
 ```ts
 @doc("Using shared route")
-@route("/uploadImage", { shared: true })
-op uploadImageBytes(@body body: bytes, @header contentType: "image/png"): void;
-@route("/uploadImage", { shared: true })
-op uploadImageJson(@body body: {imageBase64: bytes}, @header contentType: "application/json"): void;
+@route("/upload", { shared: true })
+op uploadString(data: string, @header contentType: "text/plain"): void;
+@route("/upload", { shared: true })
+op uploadBytes(data: bytes, @header contentType: "application/octet-stream" | "image/jpeg" | "image/png"): void;
 ```
 
 ### SDK
 
-Here we don't want to have special logic to handle this case. We just treat them as general operations, except for the routings are the same.
+Here we don't want to have special logic to handle this case. We just treat them as general operations, except for the routings are the same. So we will generate two protocol methods and two convenient methods.
 
 ```java
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
-public Response<Void> uploadImageBytesWithResponse(BinaryData body, RequestOptions requestOptions) {
-    return this.client.uploadImageBytesWithResponse(body, requestOptions).block();
+public Response<Void> uploadStringWithResponse(BinaryData request, RequestOptions requestOptions) {
+    return this.client.uploadStringWithResponse(request, requestOptions).block();
 }
 
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
-public Response<Void> uploadImageJsonWithResponse(BinaryData body, RequestOptions requestOptions) {
-    return this.client.uploadImageJsonWithResponse(body, requestOptions).block();
+public Response<Void> uploadBytesWithResponse(
+        String contentType, BinaryData request, RequestOptions requestOptions) {
+    return this.client.uploadBytesWithResponse(contentType, request, requestOptions).block();
 }
 
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
-public void uploadImageBytes(byte[] body) {
-    // Generated convenience method for uploadImageBytesWithResponse
+public void uploadString(String data) {
+    // Generated convenience method for uploadStringWithResponse
     RequestOptions requestOptions = new RequestOptions();
-    uploadImageBytesWithResponse(BinaryData.fromBytes(body), requestOptions).getValue();
+    BinaryData request = BinaryData.fromString(requestObj);
+    uploadStringWithResponse(request, requestOptions).getValue();
 }
 
-
+@Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
-public void uploadImageJson(byte[] imageBase64) {
-    // Generated convenience method for uploadImageJsonWithResponse
+public void uploadBytes(byte[] data) {
+    // Generated convenience method for uploadBytesWithResponse
     RequestOptions requestOptions = new RequestOptions();
-    Map<String, Object> requestObj = new HashMap<>();
-    requestObj.put("imageBase64", imageBase64);
-    BinaryData request = BinaryData.fromObject(requestObj);
-    uploadImageJsonWithResponse(request, requestOptions).getValue();
+    BinaryData request = BinaryData.fromBytes(requestObj);
+    uploadBytesWithResponse(contentType, request, requestOptions).getValue();
 }
 ```
 
