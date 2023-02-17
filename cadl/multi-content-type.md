@@ -143,7 +143,6 @@ public void upload(byte[] data, ContentType contentType) {
 }
 // For generating uploadStringOrResource():
 // Choose Option 1: we don't generate convenience method for uploadStringOrResource(), user just use the protocol method.
-// Choose Option 2: We can generate the convenience methd like option2.
 // Choose Option 2: Not applicable to this case?
 ```
 
