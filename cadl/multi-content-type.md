@@ -45,42 +45,9 @@ public Response<Void> uploadWithResponse(String contentType, BinaryData request,
 **Cons:**
 1. may be lack of usibility.
 
+#### Option 2: Generate convenience methods according to content type and data type mapping
 
-#### **Option 2: Generate one convenience method**
-
-In option 2, we will generate a convenience method that accepts a union base type and contentType.
-
-```java
-@Generated
-@ServiceMethod(returns = ReturnType.SINGLE)
-public Response<Void> uploadWithResponse(String contentType, BinaryData request, RequestOptions requestOptions) {
-    return this.client.uploadWithResponse(contentType, request, requestOptions).block();
-}
-@Generated
-@ServiceMethod(returns = ReturnType.SINGLE)
-public void upload(DataModelBase data, ContentType contentType) {
-    // Generated convenience method for uploadWithResponse
-    RequestOptions requestOptions = new RequestOptions();
-    // Set contentType to header
-    Map<String, Object> requestObj = new HashMap<>();
-    requestObj.put("data", data);
-    BinaryData request = BinaryData.fromObject(requestObj);
-    uploadWithResponse(contentType, request, requestOptions).getValue();
-}
-```
-
-**Pros:**
-1. Have one convenience method for user to pass in data and content type. 
-2. Implementation cost low.
-
-**Cons:**
-1. We expose the union base class, it may not be friendly to user. 
-2. If the user set the data, we don't infer content-type for them. (In cases that setting data can't determine content-type, e.g.content-type is "image/jpeg" or "image/png", it's fine. But in other cases, it may be lack of usibility)
-
-
-#### Option 3: Generate convenience methods according to content type and data type mapping
-
-In Option 3, we don't expose union base class, but map the content type to modulerfour type, for each modulerfour type, we will find the corresponding data type and generate convenience method.
+In Option 2, we don't expose union base class, but map the content type to modulerfour type, for each modulerfour type, we will find the corresponding data type and generate convenience method.
 
 ```java
 @Generated
@@ -94,9 +61,7 @@ public void upload(String data) {
     // Generated convenience method for uploadWithResponse
     RequestOptions requestOptions = new RequestOptions();
     // Set "text/plain" to header
-    Map<String, Object> requestObj = new HashMap<>();
-    requestObj.put("data", data);
-    BinaryData request = BinaryData.fromObject(requestObj);
+    BinaryData request = BinaryData.fromString(data);
     uploadWithResponse(contentType, request, requestOptions).getValue();
 }
 @Generated
@@ -105,9 +70,7 @@ public void upload(byte[] data, ContentType contentType) {
     // Generated convenience method for uploadWithResponse
     RequestOptions requestOptions = new RequestOptions();
     // Set content-type to header, it can be: "application/octet-stream" | "image/jpeg" | "image/png"
-    Map<String, Object> requestObj = new HashMap<>();
-    requestObj.put("data", data);
-    BinaryData request = BinaryData.fromObject(requestObj);
+    BinaryData request = BinaryData.fromBytes(data);
     uploadWithResponse(contentType, request, requestOptions).getValue();
 }
 @Generated
@@ -116,9 +79,7 @@ public void upload(Resource data) {
     // Generated convenience method for uploadWithResponse
     RequestOptions requestOptions = new RequestOptions();
     // Set "application/json" to header
-    Map<String, Object> requestObj = new HashMap<>();
-    requestObj.put("data", data);
-    BinaryData request = BinaryData.fromObject(requestObj);
+    BinaryData request = BinaryData.fromObject(data);
     uploadWithResponse(contentType, request, requestOptions).getValue();
 }
 ```
@@ -131,7 +92,7 @@ public void upload(Resource data) {
 
 
 #### My preference
-We use Option 1 for March GA, and extend it later using Option 3. 
+We use Option 1 for March GA, and later if needed, we can extend it using Option 2. 
 
 ## Case 2
 
@@ -167,9 +128,7 @@ public void upload(String data) {
     // Generated convenience method for uploadStringWithResponse
     RequestOptions requestOptions = new RequestOptions();
     // Set content-type as "text/plain" to header
-    Map<String, Object> requestObj = new HashMap<>();
-    requestObj.put("data", data);
-    BinaryData request = BinaryData.fromObject(requestObj);
+    BinaryData request = BinaryData.fromString(data);
     uploadWithResponse(request, requestOptions).getValue();
 }
 
@@ -179,14 +138,12 @@ public void upload(byte[] data, ContentType contentType) {
     // Generated convenience method for uploadBytesWithResponse
     RequestOptions requestOptions = new RequestOptions();
     // Set contentType to header
-    Map<String, Object> requestObj = new HashMap<>();
-    requestObj.put("data", data);
-    BinaryData request = BinaryData.fromObject(requestObj);
+    BinaryData request = BinaryData.fromBytes(data);
     uploadWithResponse(contentType, request, requestOptions).getValue();
 }
 // Choose Option 1: we don't generate convenience method for uploadStringOrResource(), user just use the protocol method.
 // Choose Option 2: We can generate the convenience methd like option2.
-// Choose Option 3: Not applicable to this case?
+// Choose Option 2: Not applicable to this case?
 ```
 
 ### Open Questions
