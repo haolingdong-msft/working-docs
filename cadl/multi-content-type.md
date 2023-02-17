@@ -195,10 +195,10 @@ public void upload(byte[] data, ContentType contentType) {
 
 - Currently we consider `@overload` as methods with the same. Another choice is we generate methods with different names: `uploadString`, `uploadBytes`, `uploadStringOrResource`, if with different names, overload operations are similar to general operations except the route is the same. Do we agree on considering `@overload` as methods with the same?
 - In the above example, we don't have conveniece method for `Resource` type. If user wants to send request with content type as "application/json", since he/she does not define overload method for it, he/she needs to use the protocol method to send the request. Do we need to generate convenient method for content types that does not define overload methods?
-- What if overload methods have same signature? shall we use different name? e.g.
+- What if overload methods have same signature from Java code perspective? shall we use different name? e.g.
 ```ts
 @overload(upload)
-op uploadImage(data: string, @header contentType: "image/jpeg" | "image/png"): void;
+op uploadImage(data: bytes, @header contentType: "image/jpeg" | "image/png"): void;
 @overload(upload)
 op uploadFile(data: bytes, @header contentType: "application/octet-stream"): void;
 ```
