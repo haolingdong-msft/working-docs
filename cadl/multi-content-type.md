@@ -260,7 +260,7 @@ There are still other cases that need to be considered.
 - 
 Java can't overload on response type.
 
-- `@overload` together with `@internal`, shall we keep the overload method name? [python gist](https://gist.github.com/msyyc/87a79b917deec25639f9f10d20589e55?permalink_comment_id=4472409#gistcomment-4472409)
+- `@overload` together with `@internal`, shall we keep the overload method name? [python decision](https://gist.github.com/msyyc/87a79b917deec25639f9f10d20589e55?permalink_comment_id=4472409#gistcomment-4472409)
 ```ts
 @doc("Using `@overload`")
 @route("/upload")
