@@ -61,7 +61,7 @@ public void upload(String data) {
     // Generated convenience method for uploadWithResponse
     RequestOptions requestOptions = new RequestOptions();
     // Set "text/plain" to header
-    uploadWithResponse(contentType, BinaryData.fromObject(data), requestOptions).getValue();
+    uploadWithResponse(contentType, BinaryData.fromString(data), requestOptions).getValue();
 }
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
@@ -69,7 +69,7 @@ public void upload(byte[] data, ContentType contentType) {
     // Generated convenience method for uploadWithResponse
     RequestOptions requestOptions = new RequestOptions();
     // Set content-type to header, it can be: "application/octet-stream" | "image/jpeg" | "image/png"
-    uploadWithResponse(contentType, BinaryData.fromObject(data), requestOptions).getValue();
+    uploadWithResponse(contentType, BinaryData.fromBytes(data), requestOptions).getValue();
 }
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
@@ -125,7 +125,7 @@ public void upload(String data) {
     // Generated convenience method for uploadStringWithResponse
     RequestOptions requestOptions = new RequestOptions();
     // Set content-type as "text/plain" to header
-    uploadWithResponse(BinaryData.fromObject(data), requestOptions).getValue();
+    uploadWithResponse(BinaryData.fromString(data), requestOptions).getValue();
 }
 
 @Generated
@@ -134,7 +134,7 @@ public void upload(byte[] data, ContentType contentType) {
     // Generated convenience method for uploadBytesWithResponse
     RequestOptions requestOptions = new RequestOptions();
     // Set contentType to header
-    uploadWithResponse(contentType, BinaryData.fromObject(data), requestOptions).getValue();
+    uploadWithResponse(contentType, BinaryData.fromBytes(data), requestOptions).getValue();
 }
 // For generating uploadStringOrResource():
 // Choose Option 1: we don't generate convenience method for uploadStringOrResource(), user just use the protocol method.
@@ -190,7 +190,7 @@ public Response<Void> uploadBytesWithResponse(
 public void uploadString(String data) {
     // Generated convenience method for uploadStringWithResponse
     RequestOptions requestOptions = new RequestOptions();
-    uploadStringWithResponse(BinaryData.fromObject(data), requestOptions).getValue();
+    uploadStringWithResponse(BinaryData.fromString(data), requestOptions).getValue();
 }
 
 @Generated
@@ -198,7 +198,7 @@ public void uploadString(String data) {
 public void uploadBytes(byte[] data) {
     // Generated convenience method for uploadBytesWithResponse
     RequestOptions requestOptions = new RequestOptions();
-    uploadStringWithResponse(BinaryData.fromObject(data), requestOptions).getValue();
+    uploadStringWithResponse(BinaryData.fromBytes(data), requestOptions).getValue();
 }
 ```
 
