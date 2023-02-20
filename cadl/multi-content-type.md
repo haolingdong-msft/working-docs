@@ -47,7 +47,7 @@ public Response<Void> uploadWithResponse(String contentType, BinaryData request,
 
 #### Option 2: Generate convenience methods according to content type and data type mapping
 
-In Option 2, we don't expose union base class, but map the content type to modulerfour type, for each modulerfour type, we will find the corresponding data type and generate convenience method.
+In Option 2, we will map the content type to modulerfour type, for each modulerfour type, we will find the corresponding data type and generate convenience method.
 
 ```java
 @Generated
