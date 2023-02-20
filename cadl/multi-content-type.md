@@ -55,6 +55,7 @@ In Option 2, we will map the content type to modulerfour type, for each modulerf
 public Response<Void> uploadWithResponse(String contentType, BinaryData request, RequestOptions requestOptions) {
     return this.client.uploadWithResponse(contentType, request, requestOptions).block();
 }
+
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
 public void upload(String data) {
@@ -63,6 +64,8 @@ public void upload(String data) {
     // Set "text/plain" to header
     uploadWithResponse(contentType, BinaryData.fromString(data), requestOptions).getValue();
 }
+
+// comments describing the content-type can be: "application/octet-stream" | "image/jpeg" | "image/png"
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
 public void upload(byte[] data, ContentType contentType) {
@@ -71,6 +74,7 @@ public void upload(byte[] data, ContentType contentType) {
     // Set content-type to header, it can be: "application/octet-stream" | "image/jpeg" | "image/png"
     uploadWithResponse(contentType, BinaryData.fromBytes(data), requestOptions).getValue();
 }
+
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
 public void upload(Resource data) {
@@ -128,6 +132,7 @@ public void upload(String data) {
     uploadWithResponse(BinaryData.fromString(data), requestOptions).getValue();
 }
 
+// comments describing the content-type can be: "application/octet-stream" | "image/jpeg" | "image/png"
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
 public void upload(byte[] data, ContentType contentType) {
