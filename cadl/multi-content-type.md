@@ -61,8 +61,7 @@ public void upload(String data) {
     // Generated convenience method for uploadWithResponse
     RequestOptions requestOptions = new RequestOptions();
     // Set "text/plain" to header
-    BinaryData request = BinaryData.fromString(data);
-    uploadWithResponse(contentType, request, requestOptions).getValue();
+    uploadWithResponse(contentType, BinaryData.fromObject(data), requestOptions).getValue();
 }
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
@@ -70,8 +69,7 @@ public void upload(byte[] data, ContentType contentType) {
     // Generated convenience method for uploadWithResponse
     RequestOptions requestOptions = new RequestOptions();
     // Set content-type to header, it can be: "application/octet-stream" | "image/jpeg" | "image/png"
-    BinaryData request = BinaryData.fromBytes(data);
-    uploadWithResponse(contentType, request, requestOptions).getValue();
+    uploadWithResponse(contentType, BinaryData.fromObject(data), requestOptions).getValue();
 }
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
@@ -79,8 +77,7 @@ public void upload(Resource data) {
     // Generated convenience method for uploadWithResponse
     RequestOptions requestOptions = new RequestOptions();
     // Set "application/json" to header
-    BinaryData request = BinaryData.fromObject(data);
-    uploadWithResponse(contentType, request, requestOptions).getValue();
+    uploadWithResponse(contentType, BinaryData.fromObject(data), requestOptions).getValue();
 }
 ```
 
@@ -128,8 +125,7 @@ public void upload(String data) {
     // Generated convenience method for uploadStringWithResponse
     RequestOptions requestOptions = new RequestOptions();
     // Set content-type as "text/plain" to header
-    BinaryData request = BinaryData.fromString(data);
-    uploadWithResponse(request, requestOptions).getValue();
+    uploadWithResponse(BinaryData.fromObject(data), requestOptions).getValue();
 }
 
 @Generated
@@ -138,8 +134,7 @@ public void upload(byte[] data, ContentType contentType) {
     // Generated convenience method for uploadBytesWithResponse
     RequestOptions requestOptions = new RequestOptions();
     // Set contentType to header
-    BinaryData request = BinaryData.fromBytes(data);
-    uploadWithResponse(contentType, request, requestOptions).getValue();
+    uploadWithResponse(contentType, BinaryData.fromObject(data), requestOptions).getValue();
 }
 // For generating uploadStringOrResource():
 // Choose Option 1: we don't generate convenience method for uploadStringOrResource(), user just use the protocol method.
@@ -167,9 +162,9 @@ In case 3, we use 'shared route' feature to support multiple content types.
 ```ts
 @doc("Using shared route")
 @route("/upload", { shared: true })
-op uploadString(data: string, @header contentType: "text/plain"): void;
+op uploadString(@body data: string, @header contentType: "text/plain"): void;
 @route("/upload", { shared: true })
-op uploadBytes(data: bytes, @header contentType: "application/octet-stream" | "image/jpeg" | "image/png"): void;
+op uploadBytes(@body data: bytes, @header contentType: "application/octet-stream" | "image/jpeg" | "image/png"): void;
 ```
 
 ### SDK
@@ -195,8 +190,7 @@ public Response<Void> uploadBytesWithResponse(
 public void uploadString(String data) {
     // Generated convenience method for uploadStringWithResponse
     RequestOptions requestOptions = new RequestOptions();
-    BinaryData request = BinaryData.fromString(requestObj);
-    uploadStringWithResponse(request, requestOptions).getValue();
+    uploadStringWithResponse(BinaryData.fromObject(data), requestOptions).getValue();
 }
 
 @Generated
@@ -204,8 +198,7 @@ public void uploadString(String data) {
 public void uploadBytes(byte[] data) {
     // Generated convenience method for uploadBytesWithResponse
     RequestOptions requestOptions = new RequestOptions();
-    BinaryData request = BinaryData.fromBytes(requestObj);
-    uploadBytesWithResponse(contentType, request, requestOptions).getValue();
+    uploadStringWithResponse(BinaryData.fromObject(data), requestOptions).getValue();
 }
 ```
 
