@@ -26,7 +26,7 @@ op upload(data: string | bytes | Resource, @header contentType: "text/plain" | "
 
 ### SDK
 
-I wrote three options on the generated SDK. For each options, I listed the pros and cons from my understanding.
+I wrote two options on the generated SDK. For each options, I listed the pros and cons from my understanding.
 
 #### **Option 1: Generate protocol method only**
 
