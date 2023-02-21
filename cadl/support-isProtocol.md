@@ -9,38 +9,38 @@ We defined five operations with different `@convenientApi` and `@protocolApi` de
 **Cadl definition**
 ```typescript
 interface ProtocolAndConvenienceOp {
-  @doc("When set protocol false and convenient true, then the protocol method should be package private")
-  @route("internalProtocol")
-  @post
-  @convenientAPI(true)
-  @protocolAPI(false)
-  op onlyConvenient(@body body: Resource): Resource;  
+    @doc("When set protocol false and convenient true, then the protocol method should be package private")
+    @route("onlyConvenient")
+    @post
+    @convenientAPI(true)
+    @protocolAPI(false)
+    onlyConvenient(@body body: ResourceA): ResourceB;
 
-  @doc("When set protocol true and convenient false, only the protocol method should be generated")
-  @route("onlyProtocol")
-  @get
-  @convenientAPI(false)
-  @protocolAPI(true)
-  op onlyProtocol(): void;
+    @doc("When set protocol true and convenient false, only the protocol method should be generated, ResourceC and ResourceD should not be generated")
+    @route("onlyProtocol")
+    @post
+    @convenientAPI(false)
+    @protocolAPI(true)
+    onlyProtocol(@body body: ResourceC): ResourceD;
 
-  @doc("When set protocol false and convenient false, this will throw error in emitter")
-  @route("errorSetting")
-  @get
-  @convenientAPI(false)
-  @protocolAPI(false)
-  op errorSetting(@body body: Resource): Resource;
+    @doc("When set protocol false and convenient false")
+    @route("errorSetting")
+    @post
+    @convenientAPI(false)
+    @protocolAPI(false)
+    errorSetting(@body body: ResourceC): ResourceD;
 
-  @doc("Setting protocol true and convenient true, both convenient and protocol methods will be generated")
-  @route("bothConvenientAndProtocol")
-  @get
-  @convenientAPI(false)
-  @protocolAPI(false)
-  op bothConvenientAndProtocol(@body body: Resource): Resource;
+    @doc("Setting protocol true and convenient true, both convenient and protocol methods will be generated")
+    @route("bothConvenientAndProtocol")
+    @post
+    @convenientAPI(true)
+    @protocolAPI(true)
+    bothConvenientAndProtocol(@body body: ResourceA): ResourceB;
 
-  @doc("Default behavior is both convenient and protocol methods will be generated")
-  @route("default")
-  @get
-  op default(@body body: Resource): Resource;
+    @doc("Default behavior is both convenient and protocol methods will be generated")
+    @route("default")
+    @post
+    default(@body body: ResourceA): ResourceB;
 }
 ```
 
