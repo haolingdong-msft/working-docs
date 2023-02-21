@@ -153,9 +153,9 @@ public void upload(byte[] data, ContentType contentType) {
 - What if overload methods have same signature from Java code perspective? shall we use different name? e.g.
 ```ts
 @overload(upload)
-op uploadImage(data: bytes, @header contentType: "image/jpeg" | "image/png"): void;
+op uploadImage(@body data: bytes, @header contentType: "image/jpeg" | "image/png"): void;
 @overload(upload)
-op uploadFile(data: bytes, @header contentType: "application/octet-stream"): void;
+op uploadFile(@body data: bytes, @header contentType: "application/octet-stream"): void;
 ```
 
 ## Case 3
