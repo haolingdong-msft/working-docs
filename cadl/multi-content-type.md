@@ -21,7 +21,7 @@ model Resource {
 
 @doc("Using union in operation without defining overload mapping")
 @route("/upload")
-op upload(data: string | bytes | Resource, @header contentType: "text/plain" | "application/json" | "application/octet-stream" | "image/jpeg" | "image/png"): void;
+op upload(@body data: string | bytes | Resource, @header contentType: "text/plain" | "application/json" | "application/octet-stream" | "image/jpeg" | "image/png"): void;
 ```
 
 ### SDK
@@ -103,13 +103,13 @@ In case 2, we use @overload to define convenience methods.
 ```ts
 @doc("Using `@overload`")
 @route("/upload")
-op upload(data: string | bytes | Resource, @header contentType: "text/plain" | "application/json" | "application/octet-stream" | "image/jpeg" | "image/png"): void;
+op upload(@body data: string | bytes | Resource, @header contentType: "text/plain" | "application/json" | "application/octet-stream" | "image/jpeg" | "image/png"): void;
 @overload(upload)
-op uploadString(data: string, @header contentType: "text/plain" ): void;
+op uploadString(@body data: string, @header contentType: "text/plain" ): void;
 @overload(upload)
-op uploadBytes(data: bytes, @header contentType: "application/octet-stream" | "image/jpeg" | "image/png"): void;
+op uploadBytes(@body data: bytes, @header contentType: "application/octet-stream" | "image/jpeg" | "image/png"): void;
 @overload(upload)
-op uploadStringOrResource(data: string | Resource, @header contentType: "text/plain" | "application/json"): void; // This case is triky, user might not define like this way, but want to bring this up since user can define this way, and it causes complexity in SDK.
+op uploadStringOrResource(@body data: string | Resource, @header contentType: "text/plain" | "application/json"): void; // This case is triky, user might not define like this way, but want to bring this up since user can define this way, and it causes complexity in SDK.
 ```
 
 ### SDK:
@@ -220,13 +220,13 @@ Java can't overload on different return type, but same input parameter type.
 @doc("Using `@overload`")
 @route("/upload")
 @internal
-op upload(data: string | bytes | Resource, @header contentType: "text/plain" | "application/json" | "application/octet-stream" | "image/jpeg" | "image/png"): void;
+op upload(@body data: string | bytes | Resource, @header contentType: "text/plain" | "application/json" | "application/octet-stream" | "image/jpeg" | "image/png"): void;
 @overload(upload)
-op uploadString(data: string, @header contentType: "text/plain" ): void;
+op uploadString(@body data: string, @header contentType: "text/plain" ): void;
 @overload(upload)
-op uploadBytes(data: bytes, @header contentType: "application/octet-stream" | "image/jpeg" | "image/png"): void;
+op uploadBytes(@body data: bytes, @header contentType: "application/octet-stream" | "image/jpeg" | "image/png"): void;
 @overload(upload)
-op uploadStringOrResource(data: string | Resource, @header contentType: "text/plain" | "application/json"): void;
+op uploadStringOrResource(@body data: string | Resource, @header contentType: "text/plain" | "application/json"): void;
 ```
 
 
