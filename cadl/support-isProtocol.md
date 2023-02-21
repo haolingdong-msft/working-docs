@@ -54,12 +54,12 @@ Response<BinaryData> onlyConvenientWithResponse(BinaryData body, RequestOptions 
 
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
-public Resource onlyConvenient(Resource body) {
+public ResourceB onlyConvenient(ResourceA body) {
     // Generated convenience method for onlyConvenientWithResponse
     RequestOptions requestOptions = new RequestOptions();
     return onlyConvenientWithResponse(BinaryData.fromObject(body), requestOptions)
             .getValue()
-            .toObject(Resource.class);
+            .toObject(ResourceB.class);
 }
 ```
 ```java
@@ -78,13 +78,14 @@ public Response<BinaryData> bothConvenientAndProtocolWithResponse(BinaryData bod
 
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
-public Resource bothConvenientAndProtocol(Resource body) {
+public ResourceB bothConvenientAndProtocol(ResourceA body) {
     // Generated convenience method for bothConvenientAndProtocolWithResponse
     RequestOptions requestOptions = new RequestOptions();
     return bothConvenientAndProtocolWithResponse(BinaryData.fromObject(body), requestOptions)
             .getValue()
-            .toObject(Resource.class);
+            .toObject(ResourceB.class);
 }
+
 ```
 
 ```java
@@ -96,12 +97,12 @@ public Response<BinaryData> defaultMethodWithResponse(BinaryData body, RequestOp
 
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
-public Resource defaultMethod(Resource body) {
+public ResourceB defaultMethod(ResourceA body) {
     // Generated convenience method for defaultMethodWithResponse
     RequestOptions requestOptions = new RequestOptions();
     return defaultMethodWithResponse(BinaryData.fromObject(body), requestOptions)
             .getValue()
-            .toObject(Resource.class);
+            .toObject(ResourceB.class);
 }
 ```
 
