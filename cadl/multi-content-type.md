@@ -200,9 +200,10 @@ public void uploadString(String data) {
 
 @Generated
 @ServiceMethod(returns = ReturnType.SINGLE)
-public void uploadBytes(byte[] data) {
+public void uploadBytes(byte[] data, ContentType contentType) {
     // Generated convenience method for uploadBytesWithResponse
     RequestOptions requestOptions = new RequestOptions();
+    // set contentType to header
     uploadStringWithResponse(BinaryData.fromBytes(data), requestOptions).getValue();
 }
 ```
