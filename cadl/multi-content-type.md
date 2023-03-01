@@ -95,6 +95,10 @@ public void upload(Resource data) {
 #### My preference
 We use Option 1 for March GA, and later if needed, we can extend it using Option 2. 
 
+#### Notes
+This case is invalid because we don't the mapping between body type and content type. We want to prevent this case from linter. Before linter is ready, we can either throw error or generate protocol method only for this case.
+
+
 ## Case 2
 
 In case 2, we use @overload to define convenience methods.
@@ -148,9 +152,9 @@ public void upload(byte[] data, ContentType contentType) {
 
 ### Open Questions
 
-- Currently we consider `@overload` as methods with the same. Another choice is we generate methods with different names: `uploadString`, `uploadBytes`, `uploadStringOrResource`, if with different names, overload operations are similar to general operations except the route is the same. Do we agree on considering `@overload` as methods with the same name?
-- In the above example, we don't have conveniece method for `Resource` type. If user wants to send request with content type as "application/json", since he/she does not define overload method for it, he/she needs to use the protocol method to send the request. Do we need to generate convenient method for content types that does not define overload methods?
-- What if overload methods have same signature from Java code perspective? shall we use different name? e.g.
+- Currently we consider `@overload` as methods with the same. Another choice is we generate methods with different names: `uploadString`, `uploadBytes`, `uploadStringOrResource`, if with different names, overload operations are similar to general operations except the route is the same. Do we agree on considering `@overload` as methods with the same name? -> Yes, overload means method with the same name.
+- In the above example, we don't have conveniece method for `Resource` type. If user wants to send request with content type as "application/json", since he/she does not define overload method for it, he/she needs to use the protocol method to send the request. Do we need to generate convenient method for content types that does not define overload methods? -> if the user does not define overload, we will not generate convenient method for them.
+- What if overload methods have same signature from Java code perspective? shall we use different name? e.g.  -> prevent from linter
 ```ts
 @overload(upload)
 op uploadImage(@body data: bytes, @header contentType: "image/jpeg" | "image/png"): void;
@@ -214,7 +218,8 @@ There are still other cases that need to be considered.
 
 - `@overload` on response type
  
-Java can't overload on different return type, but same input parameter type.
+For overload with the same input parameters, we will use client.cadl to overwrite the name of the method to be different.
+For overload with different input parameters, we will need to generate method with the same name.
 
 - `@overload` together with `@internal`, shall we keep the overload method name? [python decision](https://gist.github.com/msyyc/87a79b917deec25639f9f10d20589e55?permalink_comment_id=4472409#gistcomment-4472409)
 ```ts
