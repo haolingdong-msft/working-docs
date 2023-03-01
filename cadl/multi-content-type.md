@@ -95,7 +95,7 @@ public void upload(Resource data) {
 #### My preference
 We use Option 1 for March GA, and later if needed, we can extend it using Option 2. 
 
-#### Notes
+#### Updates
 This case is invalid because we don't the mapping between body type and content type. We want to prevent this case from linter. Before linter is ready, we can either throw error or generate protocol method only for this case.
 
 
@@ -234,6 +234,3 @@ op uploadBytes(@body data: bytes, @header contentType: "application/octet-stream
 @overload(upload)
 op uploadStringOrResource(@body data: string | Resource, @header contentType: "text/plain" | "application/json"): void;
 ```
-
-
-<!-- For operations who define content-type as header parameter, cadl compiler will return four operations. we can treat overload operations the same as general operations, except for overload operations, we don't need to generate protocol methods. I wonder if we can just treat overload operations as `ProtocolApi=false`, which means we will still generate protocol methods with name `uploadString`, `uploadBytes`, `uploadStringOrResource`, but with package-private visibility. -->
