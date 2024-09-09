@@ -1,4 +1,4 @@
-## Spread/anonymous model Cases
+## Spread/Flattened body Cases
 
 ```tsp
 model A {
