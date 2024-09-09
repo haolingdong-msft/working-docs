@@ -260,7 +260,7 @@ client method:
 void op1(BodyFileDetails body);
 ```
 
-### Case9: combination of spread and anonymous model
+### Case9: combination of spread and flattened method signature
 ```ts
 op op1(...A);
 op op2(a: A);
