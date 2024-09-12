@@ -1,5 +1,13 @@
-## Spread/Flattened body Cases
+# Adopting TCGC usage and access for spread and flatten body cases
 
+As flatten or spread concepts are quite confusing, this document will use below definition:
+- spread body case: it means spreading a model using `...`, e.g. `op(...AModel)`
+- flatten body case: it means defining request body without `@body`, e.g. `op(a: AModel)`
+- 
+##  Cases
+[playground](https://cadlplayground.z22.web.core.windows.net/cadl-azure/?c=aW1wb3J0ICJAdHlwZXNwZWMvcmVzdCI7DQrSGnZlcnNpb25pbmfNIGF6dXJlLXRvb2xzL8gsLWNsaWVudC1nZW5lcmF0b3ItY29yZcQ3DQp1c2luZyBUeXBlU3BlYy5IdHRwO9EWVslsyRxBxGguQ8VZR8hYLkNvcmXFV0BzZXJ2aWNlKHsNCiAgdGl0bGU6ICJTcHJlYWQiLA0KfSnHJGVyKMQiIntlbmRwb2ludH0vb3BlbmFpxCYgICIvyjQgIMVNICDIKzogc3RyaW5nxRx9DQrEVOcBF2VkKFPmAIJBcGnnAL9zKQ0KbmFtZXNwYWNlIENhZGwuxl3lALJlbnVtINI0xnR2MjAyMl8wNl8wMV9wcmV2aWV3OiAixBUtMDYtMDEtxxXlANvETkBkb2MoIlRoZSDKTCBxdWVyeSBwYXJhbWV0ZXIuIikNCm1vZGVsyyVQyB7GeUDFNCgiYXBpLecA28Q2ICBAbWluTGVuZ3RoKDHGEcpyUEkgxywgdG8gdXNlIGZvciB0aGlzIG9w5AGqaW9uxX0gIGHJeegBTTvnAMLnAJnoAXRwMcshxREy1zJQYXRjaMo3P9E4zBLFOUDmAqDmAiznAjk67AGh5QHh5AG76QJE5gJ56QJKcm91dGUoIi9zxR3kANtpbnRlcmbkAelGbGF0dGVuT3DoAJQvLyDIMW9wMcQtyBZwb3N0yQ5vcCBvcDEoLi4uQSk6IHZvaeYCKNFCMt5CMihhOiDNQtNEM95EM%2BUAhiwgc%2BgBOv0AkTTeTTTlAJHbTdNTNd5TNShAcGF0aCBpZMhULCD%2FAThvcDbeVDbTVPABSvcArjfeWjflBHLFEMQBQGhlYWRlciBjb250ZW505AT1OiAiYXBwbGlj5QMrL21lcmdlLXDkAtgranNvbuYEjclBxRk65wL58ACf8wCW6wCT5QCQOOcAkPoAjW11bHRpcGFydC9mb3JtLWRhdGHoAITEAWJvZHk6IGJ5dGVzzH99DQo%3D&e=%40azure-tools%2Ftypespec-autorest&options=%7B%7D)
+
+### Common definitions
 ```tsp
 model A {
     p1: string;
@@ -12,7 +20,7 @@ model APatch {
 }
 ```
 
-### case1:
+### case1: single spread body param
 ```tsp
 op op1(...A);
 ```
@@ -36,7 +44,7 @@ client method:
 void op1(String p1, String p2);
 ```
 
-### case2:
+### case2: single flatten body param
 ```ts
 op op1(a: A);
 ```
@@ -71,7 +79,7 @@ void op1(A a);
 ```
 
 
-### case3:
+### case3: spread body + flatten body
 ```ts
 op op1(s: string, ...A);
 ```
@@ -96,7 +104,7 @@ client method:
 void op1(String, s, String p1, String p2);
 ```
 
-### case4:
+### case4: multiple flatten body param
 ```ts
 op op1(s: string, a: A);
 ```
@@ -130,7 +138,7 @@ client method:
 void op1(String s, A a);
 ```
 
-### case5:
+### case5: single spread body param + parameter
 ```ts
 op op1(@path id: string, ...A);
 ```
@@ -154,7 +162,7 @@ client method:
 op1(String id, String p1, String p2);
 ```
 
-### case6:
+### case6: single flatten body + parameter
 ```ts
 op op1(@path id: string, a: A);
 ```
@@ -188,7 +196,7 @@ void op1(String id, A a);
 ```
 
 
-### Case7:
+### Case7: flatten body + json-merge-patch
 ```ts
 op op1(
     @header contentType: "application/merge-patch+json",
@@ -226,7 +234,7 @@ client method:
 void op1(Op1PatchRequest patch);
 ```
 
-### Case8:
+### Case8: flatten body + multipart
 ```ts
 op op1(
     @header contentType: "multipart/form-data",
@@ -260,7 +268,7 @@ client method:
 void op1(BodyFileDetails body);
 ```
 
-### Case9: combination of spread and flattened method signature
+### Case9: combination of spread body op and flattened body op
 ```ts
 op op1(...A);
 op op2(a: A);
@@ -295,3 +303,5 @@ client method:
 void op1(String p1, String p2);
 void op2(A a);
 ```
+
+##Adoipting 
