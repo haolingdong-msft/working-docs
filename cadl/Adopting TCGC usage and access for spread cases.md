@@ -1,9 +1,10 @@
 # Adopting TCGC usage and access for spread and flatten body cases
 
+## Terminology
 As flatten or spread concepts are quite confusing, this document will use below definition:
 - spread body case: it means spreading a model using `...`, e.g. `op(...AModel)`
 - flatten body case: it means defining request body without `@body` and not using spread syntax `...`, e.g. `op(a: AModel)`
-- 
+
 ## TCGC logic
 If a body parameter is defined without @body, TCGC will create an anonymous model with `spread` usage for it, unless it is like case1, where there is only single spread body param, it will not create anonymous model, but reuse the spreaded model. 
 
