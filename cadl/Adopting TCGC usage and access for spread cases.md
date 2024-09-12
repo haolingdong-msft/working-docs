@@ -2,8 +2,11 @@
 
 As flatten or spread concepts are quite confusing, this document will use below definition:
 - spread body case: it means spreading a model using `...`, e.g. `op(...AModel)`
-- flatten body case: it means defining request body without `@body`, e.g. `op(a: AModel)`
+- flatten body case: it means defining request body without `@body` and not using spread syntax `...`, e.g. `op(a: AModel)`
 - 
+## TCGC logic
+If a body parameter is defined without @body, TCGC will create an anonymous model with `spread` usage for it, unless it is like case1, where there is only single spread body param, it will not create anonymous model, but reuse the spreaded model. 
+
 ##  Cases
 [playground](https://cadlplayground.z22.web.core.windows.net/cadl-azure/?c=aW1wb3J0ICJAdHlwZXNwZWMvcmVzdCI7DQrSGnZlcnNpb25pbmfNIGF6dXJlLXRvb2xzL8gsLWNsaWVudC1nZW5lcmF0b3ItY29yZcQ3DQp1c2luZyBUeXBlU3BlYy5IdHRwO9EWVslsyRxBxGguQ8VZR8hYLkNvcmXFV0BzZXJ2aWNlKHsNCiAgdGl0bGU6ICJTcHJlYWQiLA0KfSnHJGVyKMQiIntlbmRwb2ludH0vb3BlbmFpxCYgICIvyjQgIMVNICDIKzogc3RyaW5nxRx9DQrEVOcBF2VkKFPmAIJBcGnnAL9zKQ0KbmFtZXNwYWNlIENhZGwuxl3lALJlbnVtINI0xnR2MjAyMl8wNl8wMV9wcmV2aWV3OiAixBUtMDYtMDEtxxXlANvETkBkb2MoIlRoZSDKTCBxdWVyeSBwYXJhbWV0ZXIuIikNCm1vZGVsyyVQyB7GeUDFNCgiYXBpLecA28Q2ICBAbWluTGVuZ3RoKDHGEcpyUEkgxywgdG8gdXNlIGZvciB0aGlzIG9w5AGqaW9uxX0gIGHJeegBTTvnAMLnAJnoAXRwMcshxREy1zJQYXRjaMo3P9E4zBLFOUDmAqDmAiznAjk67AGh5QHh5AG76QJE5gJ56QJKcm91dGUoIi9zxR3kANtpbnRlcmbkAelGbGF0dGVuT3DoAJQvLyDIMW9wMcQtyBZwb3N0yQ5vcCBvcDEoLi4uQSk6IHZvaeYCKNFCMt5CMihhOiDNQtNEM95EM%2BUAhiwgc%2BgBOv0AkTTeTTTlAJHbTdNTNd5TNShAcGF0aCBpZMhULCD%2FAThvcDbeVDbTVPABSvcArjfeWjflBHLFEMQBQGhlYWRlciBjb250ZW505AT1OiAiYXBwbGlj5QMrL21lcmdlLXDkAtgranNvbuYEjclBxRk65wL58ACf8wCW6wCT5QCQOOcAkPoAjW11bHRpcGFydC9mb3JtLWRhdGHoAITEAWJvZHk6IGJ5dGVzzH99DQo%3D&e=%40azure-tools%2Ftypespec-autorest&options=%7B%7D)
 
@@ -304,4 +307,10 @@ void op1(String p1, String p2);
 void op2(A a);
 ```
 
-##Adoipting 
+## Adopting TCGC model usage and access solution
+
+We could treat TCGC returned `spread` usage on model type as `input`, but there remains two issues:
+
+1. case 7: flatten body + json-merge-patch, we don't know the access for `Op1PatchRequest` from operation.
+2. case 8: flatten body + multipart, as we create our own multipart model `BodyFileDetails`, and tcgc returns `bytes` type for the body param, we can't know what is the access.
+
